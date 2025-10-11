@@ -251,23 +251,9 @@
                         <div id="raw-data-table-content"></div>
                     </div>
 
-                    <!-- PEMISAH BARU -->
-                    <hr class="my-4">
-
-                    <!-- KONTROL TOMBOL SEMUA DALAM SATU BARIS -->
-                    <div class="flex flex-wrap gap-2 justify-between"> <!-- Gunakan flex-wrap dan justify-between untuk responsif -->
-                        <!-- Tombol Crosstab (Default TERTUTUP/Hijau) -->
-                        <button id="toggle-crosstab-btn" class="flex-grow px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition min-w-0" title="Tampilkan/Sembunyikan Tabel Kontingensi">Tabel Kontingensi</button>
-                        
-                        <!-- Tombol Detailed (Default TERTUTUP/Hijau) -->
-                        <button id="toggle-detailed-btn" class="flex-grow px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition min-w-0" title="Tampilkan/Sembunyikan Hasil Uji Statistik Rinci">Hasil Uji Statistik</button>
-
-                        <!-- Tombol Toggle Raw Data -->
-                        <button id="toggle-raw-data-btn" class="flex-grow px-3 py-1 text-xs font-medium text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition min-w-0" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
-
-                        <!-- Tombol Copy Raw Data -->
-                        <button id="copy-raw-data-btn" class="flex-grow px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition min-w-0" title="Salin data mentah (long format) ke clipboard">Salin Data Mentah</button>
-                    </div>
+                    <!-- PEMISAH BARU DAN KONTROL LAMA DIHAPUS DARI SINI -->
+                    <!-- <hr class="my-4"> -->
+                    <!-- <div class="flex flex-wrap gap-2 justify-between"> ... </div> -->
 
                 </div>
             </aside>
@@ -281,6 +267,26 @@
 
         </main>
     </div>
+    
+    <!-- KONTROL TOMBOL BARU (FLOATING BUTTONS) -->
+    <!-- Diubah menjadi fixed di bawah, berbaris horizontal, di tengah, menghilangkan background/shadow/border atas kecuali padding dan z-index tinggi -->
+    <div class="fixed bottom-0 left-0 right-0 flex justify-center gap-2 p-3 z-50 overflow-x-auto"> 
+        <!-- Menggunakan `left-0 right-0` dan `justify-center` untuk menengahkan horizontal dan memastikan lebar penuh -->
+        <!-- Menghilangkan `bg-white/90 backdrop-blur-sm shadow-2xl border-t border-slate-200 rounded-t-lg` -->
+        
+        <!-- Tombol Crosstab -->
+        <button id="toggle-crosstab-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Tabel Kontingensi">Tabel Kontingensi</button>
+        
+        <!-- Tombol Detailed -->
+        <button id="toggle-detailed-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Hasil Uji Statistik Rinci">Hasil Uji Statistik</button>
+
+        <!-- Tombol Toggle Raw Data -->
+        <button id="toggle-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
+
+        <!-- Tombol Copy Raw Data -->
+        <button id="copy-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Salin data mentah (long format) ke clipboard">Salin Data Mentah</button>
+    </div>
+    <!-- END FLOATING BUTTONS -->
 
     <!-- Modal Penggabungan Kategori -->
     <div id="collapse-modal" class="modal fixed inset-0 flex items-center justify-center p-4">
@@ -940,19 +946,17 @@
         
         // Toggle state internal
         state[`${stateKey}Open`] = !state[`${stateKey}Open`];
+        const isOpen = state[`${stateKey}Open`];
 
-        // Apply changes to DOM and button class/text
-        if (state[`${stateKey}Open`]) {
-            content.classList.remove('hidden');
-            // Ganti warna tombol menjadi netral jika TAMPIL
-            button.classList.remove('bg-green-100', 'text-green-700');
-            button.classList.add('bg-slate-200', 'text-slate-700');
-        } else {
-            content.classList.add('hidden');
-            // Ganti warna tombol menjadi hijau jika SEMBUNYI
-            button.classList.remove('bg-slate-200', 'text-slate-700');
-            button.classList.add('bg-green-100', 'text-green-700');
-        }
+        // Apply changes to DOM
+        content.classList.toggle('hidden', !isOpen);
+
+        // Update button appearance (Green background if closed, light gray if open/active)
+        button.classList.toggle('bg-green-600', !isOpen);
+        button.classList.toggle('hover:bg-green-700', !isOpen);
+        button.classList.toggle('bg-slate-200', isOpen);
+        button.classList.toggle('text-white', !isOpen);
+        button.classList.toggle('text-slate-700', isOpen);
     }
     
     // FUNGSI BARU: Logika Toggle untuk Raw Data (Sekarang terpisah dari toggleResultsVisibility)
@@ -964,14 +968,16 @@
 
         if (isHidden) {
             container.classList.remove('hidden');
-            button.classList.remove('bg-slate-200', 'text-slate-700');
-            button.classList.add('bg-green-600', 'text-white');
-            button.textContent = 'Sembunyikan Data'; // FIX: Update button text
+            // Warna tombol saat TERBUKA (diubah menjadi warna netral)
+            button.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+            button.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+            button.textContent = 'Sembunyikan Data'; 
         } else {
             container.classList.add('hidden');
-            button.classList.remove('bg-green-600', 'text-white');
-            button.classList.add('bg-slate-200', 'text-slate-700');
-            button.textContent = 'Data Mentah'; // FIX: Update button text
+            // Warna tombol saat TERTUTUP (diubah menjadi hijau pekat/solid)
+            button.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+            button.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+            button.textContent = 'Data Mentah';
         }
     }
 
@@ -1291,16 +1297,14 @@
             // Sembunyikan semua section hasil jika N=0
             sections.forEach(sec => sec.classList.add('hidden'));
             
-            // Pastikan tombol di Panel Input kembali ke status 'Tampilkan' dan di-highlight hijau
+            // Pastikan tombol di Panel Input kembali ke status 'Tampilkan' dan di-highlight hijau solid
             if (toggleCrosstabBtn) {
-                // Perhatikan: Karena default state di JS adalah false (hidden), maka di awal akan hijau.
-                // Logika ini hanya berlaku jika N berubah dari >0 menjadi 0.
                 toggleCrosstabBtn.classList.remove('bg-slate-200', 'text-slate-700');
-                toggleCrosstabBtn.classList.add('bg-green-100', 'text-green-700');
+                toggleCrosstabBtn.classList.add('bg-green-600', 'text-white');
             }
             if (toggleDetailedBtn) {
                 toggleDetailedBtn.classList.remove('bg-slate-200', 'text-slate-700');
-                toggleDetailedBtn.classList.add('bg-green-100', 'text-green-700');
+                toggleDetailedBtn.classList.add('bg-green-600', 'text-white');
             }
 
             // Pastikan konten hasil tersembunyi
@@ -1317,17 +1321,17 @@
         crosstabContent.classList.toggle('hidden', !state.crosstabOpen);
         detailedContent.classList.toggle('hidden', !state.detailedOpen);
         
-        // Kelola kelas tombol Crosstab
+        // Logika warna untuk tombol Crosstab
         toggleCrosstabBtn.classList.toggle('bg-slate-200', state.crosstabOpen);
         toggleCrosstabBtn.classList.toggle('text-slate-700', state.crosstabOpen);
-        toggleCrosstabBtn.classList.toggle('bg-green-100', !state.crosstabOpen);
-        toggleCrosstabBtn.classList.toggle('text-green-700', !state.crosstabOpen);
+        toggleCrosstabBtn.classList.toggle('bg-green-600', !state.crosstabOpen);
+        toggleCrosstabBtn.classList.toggle('text-white', !state.crosstabOpen);
 
-        // Kelola kelas tombol Detailed
+        // Logika warna untuk tombol Detailed
         toggleDetailedBtn.classList.toggle('bg-slate-200', state.detailedOpen);
         toggleDetailedBtn.classList.toggle('text-slate-700', state.detailedOpen);
-        toggleDetailedBtn.classList.toggle('bg-green-100', !state.detailedOpen);
-        toggleDetailedBtn.classList.toggle('text-green-700', !state.detailedOpen);
+        toggleDetailedBtn.classList.toggle('bg-green-600', !state.detailedOpen);
+        toggleDetailedBtn.classList.toggle('text-white', !state.detailedOpen);
 
 
         const chiSquareValue = stats.chiSquare.toFixed(3);
@@ -1494,6 +1498,14 @@
 
         setupListeners(); 
         handleDimensionChange(); // Panggil ini untuk inisialisasi awal DOM dan hasil
+        
+        // Inisialisasi tampilan tombol Raw Data agar sesuai dengan default: Hijau solid dan teks "Data Mentah"
+        const rawDataButton = document.getElementById('toggle-raw-data-btn');
+        if (rawDataButton) {
+            rawDataButton.classList.remove('bg-slate-200', 'text-slate-700');
+            rawDataButton.classList.add('bg-green-600', 'text-white');
+            rawDataButton.textContent = 'Data Mentah';
+        }
     });
     </script>
 </body>
