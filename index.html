@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Analisis Chi-Square Interaktif</title>
+    <!-- Chosen Palette: Calm Neutrals & Sage -->
+    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi) di kolom samping. Perubahan ini memprioritas input dan tinjauan data tabular sebelum menuju interpretasi dan visualisasi. -->
+    <!-- Visualization & Content Choices: 
+        - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Cara paling intuitif untuk input data tabular. -> Metode: Vanilla JS.
+        - Laporan Info: Frekuensi per kategori. -> Goal: Membandingkan proporsi secara visual. -> Viz/Metode: Grafik Batang Bertumpuk (Stacked Bar Chart). -> Interaksi: Grafik diperbarui secara dinamis, tooltip menampilkan detail. -> Justifikasi: Sangat efektif untuk menunjukkan hubungan bagian-terhadap-keseluruhan dan membandingkannya antar grup. -> Library: Chart.js (Canvas).
+        - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
+        - Laporan Info: P-value. -> Goal: Memberikan interpretasi yang mudah dipahami. -> Viz/Metode: Blok teks dinamis. -> Interaksi: Teks berubah (signifikan/tidak signifikan) berdasarkan ambang batas p-value. -> Justifikasi: Menerjemahkan angka statistik menjadi kesimpulan yang dapat ditindaklanjuti, sangat penting untuk pemahaman pengguna. -> Metode: Vanilla JS.
+        - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS), memberikan kredibilitas dan detail yang diperlukan oleh para ahli. -> Metode: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); border: 1px solid #e5e7eb; }
+        .chart-container { position: relative; width: 100%; height: 24rem; max-height: 450px; margin-left: auto; margin-right: auto; }
+        .metric-value { color: #15803d; }
+        .input-style { width: 100%; text-align: right; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.5rem; transition: border-color 0.2s; }
+        .input-style:focus { border-color: #16a34a; outline: none; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2); }
+        .label-input-style { width: 100%; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.5rem; }
+        .nav-button { transition: all 0.2s; }
+        .nav-button.active { background-color: #16a34a; color: white; }
+        .nav-button:not(.active):hover { background-color: #f0fdf4; }
+        .interpretation-box { background-color: #f0fdf4; border-left: 4px solid #22c55e; }
+        /* Perbaikan Layout Input Variabel */
+        .variable-input-grid { display: grid; grid-template-columns: 1fr 2fr 1.5fr; gap: 1rem; align-items: center; }
+        .variable-label { font-weight: 500; }
+        .input-header-col-2 { grid-column: 2 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
+        .input-header-col-3 { grid-column: 3 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
+        /* Layout Nama Kategori */
+        .category-input-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: center; }
+        .category-header-col-2 { grid-column: 2 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
+        .category-header-col-3 { grid-column: 3 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
+        .category-row-label { text-align: left; font-weight: 500; }
+    </style>
+</head>
+
+<body class="text-slate-800">
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Dasbor Analisis Chi-Square Interaktif</h1>
+            <p class="mt-2 text-lg text-slate-600">Analisis hubungan antara variabel kategoris secara real-time.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
+            <div class="lg:col-span-2 space-y-8 order-2 lg:order-2">
+                
+                 <section id="crosstab-section">
+                     <h2 class="text-2xl font-bold text-slate-900 mb-4">2. Tabel Kontingensi (Crosstabulation)</h2>
+                     <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="crosstab-head"></thead>
+                                <tbody id="crosstab-body" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                     </div>
+                 </section>
+                
+                 <section id="detailed-tests-section">
+                     <h2 class="text-2xl font-bold text-slate-900 mb-4">3. Hasil Uji Statistik Rinci</h2>
+                     <div class="card overflow-hidden">
+                         <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Uji Statistik</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">df</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Asymp. Sig. (2-sided)</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Exact Sig. (2-sided)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailed-tests-body" class="bg-white divide-y divide-slate-200"></tbody>
+                            </table>
+                         </div>
+                     </div>
+                 </section>
+            </div>
+
+            <!-- KOLOM KANAN (INPUT - BARIS 1) -->
+            <aside class="lg:col-span-1 order-1 lg:order-1">
+                <div class="card p-6 sticky top-8">
+                    <h2 class="text-xl font-bold text-slate-900 mb-1">1. Panel Input Data</h2>
+                    <p class="text-sm text-slate-500 mb-6">Ubah nilai frekuensi atau nama kategori di bawah ini untuk melihat semua hasil diperbarui secara otomatis.</p>
+                    
+                    <div class="space-y-4">
+                        <!-- Header Input Variabel -->
+                        <div class="variable-input-grid">
+                            <span class="variable-label"></span>
+                            <span class="input-header-col-2">Nama</span>
+                            <span class="input-header-col-3">Jml Kategori</span>
+                        </div>
+                        
+                        <!-- Variabel X Row -->
+                        <div class="variable-input-grid">
+                            <label for="varX_name" class="variable-label self-center">Variabel X</label>
+                            <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center">
+                            <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center">
+                        </div>
+                        
+                        <!-- Variabel Y Row -->
+                        <div class="variable-input-grid">
+                            <label for="varY_name" class="variable-label self-center">Variabel Y</label>
+                            <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center">
+                            <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center">
+                        </div>
+
+                    </div>
+                    
+                    <hr class="my-6">
+                    
+                    <div id="category-names-container" class="space-y-4"></div>
+
+                    <hr class="my-6">
+
+                    <h3 class="text-md font-semibold text-slate-800 mb-3">Tabel Frekuensi Observasi</h3>
+                    <div id="frequency-table-container"></div>
+                </div>
+            </aside>
+            
+            <!-- BARIS BAWAH PENUH (DASBOR ANALISIS - BARIS 4) -->
+            <div class="lg:col-span-3 space-y-8 order-3 lg:order-3">
+                 <h2 class="text-2xl font-bold text-slate-900 mb-4 mt-8">4. Dasbor Analisis & Visualisasi</h2>
+                 
+                 <section id="results-dashboard" class="card p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                        <div class="card p-5 text-center">
+                            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Nilai Chi-Square (χ²)</h3>
+                            <p id="metric-chi-square" class="metric-value text-4xl font-bold mt-1">1.283</p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">P-Value</h3>
+                            <p id="metric-p-value" class="metric-value text-4xl font-bold mt-1">.257</p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Derajat Kebebasan (df)</h3>
+                            <p id="metric-df" class="metric-value text-4xl font-bold mt-1">1</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-1">Visualisasi Proporsi</h3>
+                            <p class="text-sm text-slate-500 mb-4">Grafik ini menunjukkan perbandingan distribusi 'Variabel Y' di setiap kategori 'Variabel X'.</p>
+                            <div class="chart-container">
+                                <canvas id="chiSquareChart"></canvas>
+                            </div>
+                        </div>
+
+                        <section id="interpretation-section" class="p-4 interpretation-box flex flex-col justify-center">
+                            <h3 class="text-xl font-semibold text-green-800 mb-2">Interpretasi Hasil Utama</h3>
+                            <p class="text-sm text-green-700 mb-4">Bagian ini menerjemahkan hasil statistik menjadi kesimpulan yang mudah dipahami berdasarkan ambang batas $p < 0.05$.</p>
+                            <p id="interpretation-text" class="text-green-700 font-medium">Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara Variabel X dan Variabel Y (p = .257).</p>
+                        </section>
+                    </div>
+                </section>
+            </div>
+
+
+        </main>
+    </div>
+
+    <script>
+    let chiSquareChart;
+    let state = {
+        R: 2,
+        C: 2,
+        varXName: "Variabel X",
+        varYName: "Variabel Y",
+        catXNames: ["Kategori 1", "Kategori 2"],
+        catYNames: ["Kategori A", "Kategori B"], 
+        frequencies: [
+            [7, 6],
+            [7, 13]
+        ]
+    };
+    
+    // --- Fungsi Matematika Lanjutan untuk P-Value (Integrasi) ---
+
+    // Fungsi Log Gamma
+    const gammaLn = (n) => {
+        let x = n;
+        let y = x;
+        let tmp = x + 5.5;
+        tmp -= (x + 0.5) * Math.log(tmp);
+        let ser = 1.000000000190015;
+        ser += 76.18009172947146 / ++y;
+        ser += -86.50532032941677 / ++y;
+        ser += 24.01409824083091 / ++y;
+        ser += -1.231739572450155 / ++y;
+        ser += 0.1208650973866179e-2 / ++y;
+        ser += -0.5395239384953e-5 / ++y;
+        return -tmp + Math.log(2.5066282746310005 * ser / x);
+    };
+
+    // Fungsi Gamma Teratur Tidak Lengkap (Continuous Fraction)
+    const gammaCF = (a, x) => {
+        const ITMAX = 100;
+        const EPS = 3.0e-7;
+        let i, b, c, d, del;
+        let an, h;
+        
+        b = x + 1.0 - a;
+        c = 1.0 / EPS;
+        d = 1.0 / b;
+        h = d;
+
+        for (i = 1; i <= ITMAX; i++) {
+            an = -i * (i - a);
+            b += 2.0;
+            d = an * d + b;
+            if (Math.abs(d) < EPS) d = EPS;
+            c = b + an / c;
+            if (Math.abs(c) < EPS) c = EPS;
+            d = 1.0 / d;
+            del = d * c;
+            h *= del;
+            if (Math.abs(del - 1.0) < EPS) break;
+        }
+
+        if (i > ITMAX) {
+            console.error("A continues fraction failed");
+            return NaN;
+        }
+        return Math.exp(-x + a * Math.log(x) - gammaLn(a)) * h;
+    };
+    
+    // Fungsi P-Value Chi-Square (untuk df >= 1)
+    const chiSquarePValue = (chi, df) => {
+        if (chi < 0 || df <= 0) return 1.0;
+        if (chi === 0) return 1.0;
+        
+        let a = df / 2.0;
+        let x = chi / 2.0;
+        
+        // P-value adalah luasan ekor (1 - CDF)
+        // Fungsi gammaCF menghitung P(a, x) = Q(a, x) = 1 - P(a, x)
+        // Dimana P(a, x) adalah P(x | a), jadi CDF
+        
+        // Kasus spesial df=1 (digunakan untuk Continuity Correction)
+        if (df === 1) {
+            const z = Math.sqrt(chi);
+            const erfc = (x) => {
+                const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+                const p = 0.3275911;
+                x = Math.abs(x);
+                const t = 1.0 / (1.0 + p * x);
+                const W = (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t;
+                return W * Math.exp(-x * x);
+            };
+            return erfc(z / Math.sqrt(2));
+        }
+
+        // P-Value untuk df > 1 (menggunakan Continuous Fraction)
+        return gammaCF(a, x);
+    };
+
+    // Fungsi lama untuk P-Value DF=1 (Tidak lagi digunakan secara terpisah, diintegrasikan di atas)
+    const erfc = (x) => {
+        const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+        const p = 0.3275911;
+        x = Math.abs(x);
+        const t = 1.0 / (1.0 + p * x);
+        const W = (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t;
+        return W * Math.exp(-x * x);
+    };
+
+    const logFactorial = (n) => {
+        if (n < 0) return NaN;
+        let result = 0;
+        for (let i = 2; i <= n; i++) {
+            result += Math.log(i);
+        }
+        return result;
+    };
+
+    const calculateTableProbability = (a, b, c, d) => {
+        const R1 = a + b, R2 = c + d, C1 = a + c, C2 = b + d, N = a + b + c + d;
+        const logP = logFactorial(R1) + logFactorial(R2) + logFactorial(C1) + logFactorial(C2) -
+                     logFactorial(N) - logFactorial(a) - logFactorial(b) - logFactorial(c) - logFactorial(d);
+        return Math.exp(logP);
+    };
+
+    function fisherExactTest(n11, n12, n21, n22) {
+        const R1 = n11 + n12, R2 = n21 + n22, C1 = n11 + n21, N = R1 + R2;
+        if (N === 0) return { twoSided: NaN };
+        const minN11 = Math.max(0, R1 + C1 - N);
+        const maxN11 = Math.min(R1, C1);
+        const observedP = calculateTableProbability(n11, n12, n21, n22);
+        let twoSidedP = 0;
+        for (let k = minN11; k <= maxN11; k++) {
+            const a = k, b = R1 - a, c = C1 - a, d = R2 - c;
+            if (b < 0 || c < 0 || d < 0) continue;
+            const Pk = calculateTableProbability(a, b, c, d);
+            if (Pk <= observedP) {
+                twoSidedP += Pk;
+            }
+        }
+        return { twoSided: twoSidedP };
+    }
+
+    const calculateStatistics = () => {
+        const O = state.frequencies;
+        const R = state.R, C = state.C;
+        const Ri = new Array(R).fill(0);
+        const Cj = new Array(C).fill(0);
+        let N = 0;
+
+        for (let i = 0; i < R; i++) {
+            for (let j = 0; j < C; j++) {
+                Ri[i] += O[i][j];
+                Cj[j] += O[i][j];
+                N += O[i][j];
+            }
+        }
+
+        if (N === 0) return { N: 0 };
+        
+        const E = Array(R).fill(0).map(() => Array(C).fill(0));
+        let chiSquare = 0, ccChiSquare = 0;
+
+        for (let i = 0; i < R; i++) {
+            for (let j = 0; j < C; j++) {
+                E[i][j] = (Ri[i] * Cj[j]) / N;
+                if (E[i][j] > 0) {
+                    const diff = O[i][j] - E[i][j];
+                    chiSquare += (diff * diff) / E[i][j];
+                    if (R === 2 && C === 2) {
+                        const diffCC = Math.abs(diff) - 0.5;
+                        if (diffCC > 0) {
+                             ccChiSquare += (diffCC * diffCC) / E[i][j];
+                        }
+                    }
+                }
+            }
+        }
+        
+        const df = (R - 1) * (C - 1);
+        // PERBAIKAN: Menggunakan chiSquarePValue untuk semua df
+        const pValue = chiSquarePValue(chiSquare, df);
+        const ccPValue = (df === 1) ? chiSquarePValue(ccChiSquare, 1) : NaN;
+        
+        const fisherP = (R === 2 && C === 2) ? fisherExactTest(O[0][0], O[0][1], O[1][0], O[1][1]) : { twoSided: NaN };
+
+        return { N, O, E, Ri, Cj, chiSquare, ccChiSquare, df, pValue, ccPValue, fisherP };
+    };
+
+    const formatPValue = (p) => {
+        if (isNaN(p)) return '-';
+        return p < 0.001 ? '.000' : p.toFixed(3).replace(/^0\./, '.');
+    };
+
+    const handleDimensionChange = () => {
+        // 1. Baca dimensi baru
+        const numX = document.getElementById('num_categories_x');
+        const numY = document.getElementById('num_categories_y');
+
+        const newR = parseInt(numX.value) || 2;
+        const newC = parseInt(numY.value) || 2;
+        
+        // Simpan state lama
+        const oldR = state.R;
+        const oldC = state.C;
+        
+        // 2. Update state dimensi baru (dengan clamp)
+        state.R = Math.max(2, Math.min(10, newR));
+        state.C = Math.max(2, Math.min(10, newC));
+        numX.value = state.R; // Update input field jika nilai dikunci (clamped)
+        numY.value = state.C;
+
+        // 3. Preserve data and resize arrays
+        state.varXName = document.getElementById('varX_name').value;
+        state.varYName = document.getElementById('varY_name').value;
+        
+        // Baca semua input yang ada sebelum dirender ulang untuk memuat data terkini
+        let currentCatXNames = [];
+        let currentCatYNames = [];
+        
+        for (let i = 0; i < oldR; i++) {
+            const el = document.getElementById(`catX_name_${i}`);
+            if (el) currentCatXNames[i] = el.value;
+        }
+        for (let j = 0; j < oldC; j++) {
+            const el = document.getElementById(`catY_name_${j}`);
+            if (el) currentCatYNames[j] = el.value;
+        }
+
+        // Resize dan isi nama default, mempertahankan nama lama
+        // PERBAIKAN: Default di sini harus sesuai dengan permintaan user
+        state.catXNames = Array(state.R).fill().map((_, i) => {
+             if (i < oldR) return currentCatXNames[i];
+             // Set default baru
+             return i === 0 ? "Kategori 1" : (i === 1 ? "Kategori 2" : `Kategori ${i+1}`);
+        });
+        state.catYNames = Array(state.C).fill().map((_, j) => {
+             if (j < oldC) return currentCatYNames[j];
+             // Set default baru
+             return j === 0 ? "Kategori A" : (j === 1 ? "Kategori B" : `Kategori ${j+1}`);
+        });
+
+        // Resize dan isi frekuensi default, mempertahankan data lama
+        const newFrequencies = Array(state.R).fill().map(() => Array(state.C).fill(0));
+        for (let i = 0; i < state.R; i++) {
+            for (let j = 0; j < state.C; j++) {
+                // Pertahankan data lama
+                if (i < oldR && j < oldC) {
+                    const el = document.getElementById(`freq_${i}_${j}`);
+                    newFrequencies[i][j] = parseInt(el?.value) || state.frequencies[i][j] || 0;
+                } else {
+                    newFrequencies[i][j] = 0;
+                }
+            }
+        }
+        state.frequencies = newFrequencies;
+        
+        // 4. Render input panel segera untuk merefleksikan jumlah kategori baru
+        renderInputPanel(); 
+        
+        // 5. Lanjutkan ke flow update hasil (yang sekarang dilakukan di renderAll)
+        renderAll();
+    };
+
+    const handleInputChange = (event) => {
+        // Hanya baca nama variabel, nama kategori, dan frekuensi dari DOM yang sudah ada.
+        state.varXName = document.getElementById('varX_name').value;
+        state.varYName = document.getElementById('varY_name').value;
+        
+        // Baca nama kategori
+        for (let i = 0; i < state.R; i++) {
+            const el = document.getElementById(`catX_name_${i}`);
+            if(el) state.catXNames[i] = el.value;
+        }
+        for (let j = 0; j < state.C; j++) {
+            const el = document.getElementById(`catY_name_${j}`);
+            if(el) state.catYNames[j] = el.value;
+        }
+        
+        // Baca frekuensi
+        for (let i = 0; i < state.R; i++) {
+            for (let j = 0; j < state.C; j++) {
+                const el = document.getElementById(`freq_${i}_${j}`);
+                if(el) state.frequencies[i][j] = parseInt(el.value) || 0;
+            }
+        }
+        
+        const changedId = event.target.id;
+
+        // Jika yang diubah adalah Nama Variabel Utama, render ulang seluruh panel input (untuk header)
+        if (changedId === 'varX_name' || changedId === 'varY_name') {
+             renderInputPanel();
+        } else {
+             // Jika yang diubah adalah Nama Kategori atau Frekuensi,
+             // PERBAIKAN: Hanya perbarui header variabel di panel input dan render ulang tabel frekuensi
+             document.querySelector('#category-names-container .category-header-col-2').textContent = state.varXName;
+             document.querySelector('#category-names-container .category-header-col-3').textContent = state.varYName;
+             
+             // Panggil fungsi rendering khusus untuk Tabel Frekuensi agar nama kategori di kolom dan baris di tabel frekuensi terupdate
+             renderFrequencyTableOnly();
+        }
+
+        renderAll();
+    };
+    
+    // FUNGSI BARU: Hanya merender Tabel Frekuensi Observasi
+    const renderFrequencyTableOnly = () => {
+        const freqContainer = document.getElementById('frequency-table-container');
+        
+        // Render tabel frekuensi
+        let freqHtml = '<table class="w-full text-sm">';
+        freqHtml += `<thead><tr><th class="py-2"></th>`;
+        // Header kolom (Nama Kategori Y)
+        state.catYNames.forEach(name => {
+            freqHtml += `<th class="font-medium text-slate-600 py-2">${name}</th>`;
+        });
+        freqHtml += `</tr></thead><tbody>`;
+        for (let i = 0; i < state.R; i++) {
+            // Label baris (Nama Kategori X)
+            freqHtml += `<tr class="border-t border-slate-200"><td class="font-medium text-slate-600 py-2 pr-2">${state.catXNames[i]}</td>`;
+            for (let j = 0; j < state.C; j++) {
+                // Input Frekuensi (mempertahankan value lama)
+                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${state.frequencies[i][j]}" min="0" class="input-style"></td>`;
+            }
+            freqHtml += `</tr>`;
+        }
+        freqHtml += `</tbody></table>`;
+        freqContainer.innerHTML = freqHtml;
+        
+        // Pasang kembali listener ke input frekuensi yang BARU dibuat
+        document.querySelectorAll('#frequency-table-container input').forEach(el => el.addEventListener('input', handleInputChange));
+    }
+
+
+    const setupListeners = () => {
+        // Listener yang memicu perubahan dimensi (struktur DOM)
+        document.getElementById('num_categories_x').addEventListener('change', handleDimensionChange);
+        document.getElementById('num_categories_y').addEventListener('change', handleDimensionChange);
+        
+        // Listener untuk perubahan nama variabel (tidak mengubah struktur DOM, hanya memicu update)
+        document.getElementById('varX_name').addEventListener('input', handleInputChange);
+        document.getElementById('varY_name').addEventListener('input', handleInputChange);
+    };
+
+    const renderInputPanel = () => {
+        const catContainer = document.getElementById('category-names-container');
+
+        // Render input nama kategori
+        let catHtml = `<h3 class="text-md font-semibold text-slate-800 mb-3">Nama Kategori</h3>`;
+        
+        // Header Nama Kategori
+        catHtml += `<div class="category-input-grid mb-2">`;
+        catHtml += `<span class="category-row-label"></span>`;
+        catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
+        catHtml += `<span class="category-header-col-3">${state.varYName}</span>`;
+        catHtml += `</div>`;
+        
+        // Baris Input Kategori
+        for (let i = 0; i < state.R; i++) {
+            catHtml += `<div class="category-input-grid">`;
+            // Label Baris (Kategori 1, Kategori 2, dst.)
+            catHtml += `<label class="category-row-label self-center">Kategori ${i+1}</label>`; // Menggunakan Kategori 1, 2, 3.. sebagai label baris
+            
+            // Input Variabel X (Nama Kategori X)
+            catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center"></div>`;
+            
+            // Input Variabel Y (Nama Kategori Y)
+            if (i < state.C) {
+                catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center"></div>`;
+            } else {
+                catHtml += `<div></div>`;
+            }
+
+            catHtml += `</div>`;
+        }
+
+        // Tampilkan input Y yang tersisa jika C > R
+        if (state.C > state.R) {
+            for (let j = state.R; j < state.C; j++) {
+                catHtml += `<div class="category-input-grid">`;
+                // Label Baris Kosong
+                catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`;
+                
+                // Input X Kosong
+                catHtml += `<div></div>`;
+                
+                // Input Variabel Y
+                catHtml += `<div><input type="text" id="catY_name_${j}" value="${state.catYNames[j]}" class="label-input-style text-center"></div>`;
+                catHtml += `</div>`;
+            }
+        }
+
+        catContainer.innerHTML = catHtml;
+        
+        // Panggil renderFrequencyTableOnly di sini untuk memastikan tabel frekuensi pertama kali dimuat
+        renderFrequencyTableOnly();
+
+        // Tambahkan listener untuk input kategori yang BARU dibuat (input Frekuensi dipasang di renderFrequencyTableOnly)
+        document.querySelectorAll('#category-names-container input').forEach(el => el.addEventListener('input', handleInputChange));
+    };
+    
+    // ... (Fungsi renderCrosstab, renderDetailedTable, renderChart, renderAll tetap sama)
+    
+    const renderResults = (stats) => {
+        if (!stats || stats.N === 0) {
+            document.getElementById('metric-chi-square').textContent = '-';
+            document.getElementById('metric-p-value').textContent = '-';
+            document.getElementById('metric-df').textContent = '-';
+            return;
+        }
+
+        document.getElementById('metric-chi-square').textContent = stats.chiSquare.toFixed(3);
+        document.getElementById('metric-p-value').textContent = formatPValue(stats.pValue);
+        document.getElementById('metric-df').textContent = stats.df;
+
+        const p = stats.pValue;
+        const interpText = document.getElementById('interpretation-text');
+        
+        const pValueText = isNaN(p) ? 'P-Value tidak dapat dihitung' : `p = ${formatPValue(p)}`;
+
+        if (stats.df === 0) {
+            interpText.textContent = `Derajat kebebasan (df) adalah 0. Chi-Square tidak dapat dihitung.`;
+            interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500');
+            interpText.parentElement.classList.add('bg-slate-100', 'border-slate-400');
+        } else if (isNaN(p)) {
+             interpText.textContent = `Terjadi kesalahan saat menghitung P-Value Chi-Square. Pastikan data frekuensi valid.`;
+             interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500');
+             interpText.parentElement.classList.add('bg-slate-100', 'border-slate-400');
+        } else if (p < 0.05) {
+            interpText.parentElement.classList.remove('bg-green-50', 'border-green-500', 'bg-slate-100', 'border-slate-400');
+            interpText.parentElement.classList.add('bg-red-50', 'border-red-500');
+            interpText.innerHTML = `<span class="font-bold">Hasil Signifikan:</span> Dengan tingkat signifikansi 0.05, terdapat bukti yang cukup untuk menyatakan adanya hubungan statistik yang signifikan antara ${state.varXName} dan ${state.varYName} (${pValueText}).`;
+        } else {
+            interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-slate-100', 'border-slate-400');
+            interpText.parentElement.classList.add('bg-green-50', 'border-green-500');
+            interpText.innerHTML = `<span class="font-bold">Hasil Tidak Signifikan:</span> Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara ${state.varXName} dan ${state.varYName} (${pValueText}).`;
+        }
+    };
+    
+    const renderCrosstab = (stats) => {
+        const head = document.getElementById('crosstab-head');
+        const body = document.getElementById('crosstab-body');
+        if (!stats || stats.N === 0) { head.innerHTML = ''; body.innerHTML = ''; return; }
+
+        let headHtml = `<tr class="bg-slate-50"><th rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th><th rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th><th colspan="${state.C}" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varYName}</th><th rowspan="2" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th></tr><tr class="bg-slate-50">`;
+        state.catYNames.forEach(name => {
+            headHtml += `<th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">${name}</th>`;
+        });
+        headHtml += `</tr>`;
+        head.innerHTML = headHtml;
+
+        let bodyHtml = '';
+        for (let i = 0; i < state.R; i++) {
+            const rowTotal = stats.Ri[i];
+            bodyHtml += `<tr class="bg-white"><td rowspan="3" class="px-6 py-4 font-medium text-slate-900 align-top">${state.catXNames[i]}</td>
+                         <td class="px-6 py-2 text-slate-500">Observasi</td>`;
+            for (let j = 0; j < state.C; j++) {
+                bodyHtml += `<td class="px-6 py-2 text-right">${stats.O[i][j]}</td>`;
+            }
+            bodyHtml += `<td class="px-6 py-2 text-right font-medium">${rowTotal}</td></tr>`;
+
+            bodyHtml += `<tr class="bg-white"><td class="px-6 py-2 text-slate-500">Harapan</td>`;
+            for (let j = 0; j < state.C; j++) {
+                bodyHtml += `<td class="px-6 py-2 text-right">${stats.E[i][j].toFixed(1)}</td>`;
+            }
+            bodyHtml += `<td class="px-6 py-2 text-right font-medium">${rowTotal.toFixed(1)}</td></tr>`;
+            
+            bodyHtml += `<tr class="border-b border-slate-300"><td class="px-6 py-2 text-slate-500">% dalam ${state.varXName}</td>`;
+            for (let j = 0; j < state.C; j++) {
+                const percent = rowTotal > 0 ? (stats.O[i][j] / rowTotal * 100).toFixed(1) + '%' : '0.0%';
+                bodyHtml += `<td class="px-6 py-2 text-right">${percent}</td>`;
+            }
+            bodyHtml += `<td class="px-6 py-2 text-right font-medium">100.0%</td></tr>`;
+        }
+        bodyHtml += `<tr class="bg-slate-100 font-bold border-t-2 border-slate-400"><td colspan="2" class="px-6 py-2 text-left">Total Kolom</td>`;
+        stats.Cj.forEach(total => {
+             bodyHtml += `<td class="px-6 py-2 text-right">${total}</td>`;
+        });
+        bodyHtml += `<td class="px-6 py-2 text-right">${stats.N}</td></tr>`;
+        body.innerHTML = bodyHtml;
+    };
+
+    const renderDetailedTable = (stats) => {
+        const body = document.getElementById('detailed-tests-body');
+        if (!stats || stats.N === 0) { body.innerHTML = ''; return; }
+
+        let bodyHtml = `<tr>
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">Pearson Chi-Square</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">${stats.chiSquare.toFixed(3)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">${stats.df}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">${formatPValue(stats.pValue)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
+        </tr>`;
+
+        if (state.R === 2 && state.C === 2) {
+             bodyHtml += `<tr class="bg-slate-50">
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">Continuity Correction</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">${stats.ccChiSquare.toFixed(3)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">1</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">${formatPValue(stats.ccPValue)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
+            </tr>`;
+             bodyHtml += `<tr>
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">Fisher's Exact Test</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">${formatPValue(stats.fisherP.twoSided)}</td>
+            </tr>`;
+        }
+        
+        bodyHtml += `<tr class="bg-green-50 font-bold">
+            <td class="px-6 py-4 whitespace-nowrap text-green-800">N of Valid Cases</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-green-800" colspan="4">${stats.N}</td>
+        </tr>`;
+        body.innerHTML = bodyHtml;
+    };
+
+    const renderChart = (stats) => {
+        const ctx = document.getElementById('chiSquareChart').getContext('2d');
+        if (!stats || stats.N === 0) { if (chiSquareChart) chiSquareChart.destroy(); return; }
+
+        const datasets = state.catYNames.map((name, j) => {
+            return {
+                label: name,
+                data: state.catXNames.map((_, i) => stats.O[i][j]),
+                backgroundColor: ['#34d399', '#fbbf24', '#60a5fa', '#f87171'][j % 4],
+                borderColor: ['#059669', '#d97706', '#2563eb', '#dc2626'][j % 4],
+                borderWidth: 1
+            };
+        });
+
+        if (chiSquareChart) {
+            chiSquareChart.data.labels = state.catXNames;
+            chiSquareChart.data.datasets = datasets;
+            chiSquareChart.update();
+        } else {
+            chiSquareChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: state.catXNames,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        const total = context.chart.data.datasets.reduce((sum, ds) => sum + ds.data[context.dataIndex], 0);
+                                        const percentage = total > 0 ? (context.parsed.y / total * 100).toFixed(1) + '%' : '0.0%';
+                                        label += `${context.parsed.y} (${percentage})`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Jumlah Frekuensi' } }
+                    }
+                }
+            });
+        }
+    };
+    
+    const renderAll = () => {
+        
+        const stats = calculateStatistics();
+        renderResults(stats);
+        renderCrosstab(stats);
+        renderDetailedTable(stats);
+        renderChart(stats);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Atur state awal dan setup listener utama
+        state.catXNames = Array(state.R).fill().map((_, i) => `Kategori ${i+1}`);
+        state.catYNames = Array(state.C).fill().map((_, j) => `Kategori ${j+1}`);
+        setupListeners(); 
+        handleDimensionChange(); // Panggil ini untuk inisialisasi awal DOM dan hasil
+    });
+    </script>
+</body>
+</html>
