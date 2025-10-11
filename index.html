@@ -1138,13 +1138,23 @@
 
         // --- 2. Peringatan Frekuensi Harapan Rendah (diletakkan di bawah interpretasi naratif) ---
         if (stats.percentLowExpected > 0) {
-            let warningText = `Peringatan: ${stats.lowExpectedCount} sel (${stats.percentLowExpected.toFixed(1)}%) memiliki frekuensi harapan (Expected Count) kurang dari 5.`;
+            // Tampilkan dimensi tabel saat ini
+            const currentDimension = `${state.R} \\times ${state.C}`;
+
+            let warningText = `${stats.lowExpectedCount} sel (${stats.percentLowExpected.toFixed(1)}%) memiliki frekuensi harapan kurang dari 5.`;
 
             if (stats.percentLowExpected > 20) {
-                warningText += ` Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin tidak valid untuk tabel $R \\times C$ ini. Anda disarankan untuk merujuk pada Uji Likelihood Ratio atau mempertimbangkan penggabungan kategori.`;
-                if (stats.R === 2 && state.C === 2) {
-                    warningText = `Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin tidak valid. Anda harus mengacu pada Fisher's Exact Test atau Continuity Correction.`;
+                // Gunakan template baru
+                warningText = `${stats.lowExpectedCount} sel (${stats.percentLowExpected.toFixed(1)}%) memiliki frekuensi harapan kurang dari 5 lebih dari 20%, maka hasil Uji Chi-Square Pearson mungkin tidak valid.`;
+                
+                // Tambahkan rekomendasi umum berdasarkan dimensi
+                if (state.R === 2 && state.C === 2) {
+                    warningText += ` Anda harus mengacu pada Fisher's Exact Test atau Continuity Correction.`;
+                } else {
+                    // KASUS R x C > 2x2
+                    warningText += ` Anda disarankan untuk merujuk pada **Uji Likelihood Ratio** atau mempertimbangkan penggabungan kategori.`;
                 }
+                
             } else if (stats.percentLowExpected > 0) {
                  warningText += ` Pastikan setiap sel memiliki nilai harapan (Expected Count) minimal ${stats.minExpectedCount.toFixed(2)}.`;
             }
@@ -1215,8 +1225,8 @@
         // Tambahkan kelas baru
         interpSection.classList.add(...addClasses);
 
-        // Template Kalimat Utama
-        let mainSentence = `Berdasarkan hasil uji pearson chi-square menunjukkan bahwa nilai $\\chi2$ = ${chiSquareValue} dengan p value = ${pValueFormatted} ${pValueComparison}, ${conclusion}`; // Ganti \chi^2 menjadi \chi2
+        // Template Kalimat Utama Disesuaikan: "Berdasarkan hasil uji Chi-square menunjukkan bahwa p value = [nilai p] [perbandingan] α (0.05), [kesimpulan]."
+        let mainSentence = `Berdasarkan hasil uji Chi-square menunjukkan bahwa p value = ${pValueFormatted} ${pValueComparison}, ${conclusion}`;
 
         // Terapkan teks
         interpText.innerHTML = mainSentence;
@@ -1332,16 +1342,14 @@
             document.getElementById('interpretation-section-main') // Tambahkan Interpretasi Utama
         ];
 
-        // Sembunyikan bagian 4 (Dasbor Analisis) karena sudah kosong
-        // Note: Bagian 4 sudah dihapus, section ID di atas sudah di update
+        if (!stats || stats.N === 0) {
+            // Sembunyikan semua hasil jika N=0
+            sections.forEach(sec => sec.classList.add('hidden'));
+            return;
+        }
 
-        sections.forEach(sec => {
-            if (hasData) {
-                sec.classList.remove('hidden');
-            } else {
-                sec.classList.add('hidden');
-            }
-        });
+        // Tampilkan semua hasil jika N > 0
+        sections.forEach(sec => sec.classList.remove('hidden'));
 
         renderResults(stats);
         renderCrosstab(stats);
