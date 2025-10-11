@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dasbor Analisis Chi-Square Interaktif</title>
     <!-- Chosen Palette: Calm Neutrals & Sage -->
-    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi) di kolom samping. Perubahan ini memprioritas input dan tinjauan data tabular sebelum menuju interpretasi dan visualisasi. -->
+    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci dan Interpretasi, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi). Perubahan terbaru memprioritaskan penyajian output statistik formal dan interpretasi tekstual secara langsung. -->
     <!-- Visualization & Content Choices: 
         - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Cara paling intuitif untuk input data tabular. -> Metode: Vanilla JS.
-        - Laporan Info: Frekuensi per kategori. -> Goal: Membandingkan proporsi secara visual. -> Viz/Metode: Grafik Batang Bertumpuk (Stacked Bar Chart). -> Interaksi: Grafik diperbarui secara dinamis, tooltip menampilkan detail. -> Justifikasi: Sangat efektif untuk menunjukkan hubungan bagian-ke-keseluruhan dan membandingkannya antar grup. -> Library: Chart.js (Canvas).
         - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
-        - Laporan Info: P-value. -> Goal: Memberikan interpretasi yang mudah dipahami. -> Viz/Metode: Blok teks dinamis. -> Interaksi: Teks berubah (signifikan/tidak signifikan) berdasarkan ambang batas p-value. -> Justifikasi: Menerjemahkan angka statistik menjadi kesimpulan yang dapat ditindaklanjuti, sangat penting untuk pemahaman pengguna. -> Metode: Vanilla JS.
         - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS), memberikan kredibilitas dan detail yang diperlukan oleh para ahli. -> Metode: Vanilla JS.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
@@ -159,6 +157,17 @@
                             </table>
                          </div>
                      </div>
+                     <!-- KOTAK INTERPRETASI UTAMA DIPINDAH KE SINI -->
+                     <section id="interpretation-section-main" class="mt-4 p-3 interpretation-box">
+                        <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Uji Statistik</h3>
+                        <p id="interpretation-text" class="text-xs text-green-700 font-medium">Interpretasi akan muncul di sini setelah Anda memasukkan data.</p>
+                     </section>
+                 </section>
+                
+                 <!-- BAGIAN 4 DIHAPUS (HANYA DIBIARKAN KONTEN KOSONG) -->
+                 <section id="analysis-dashboard-section" class="hidden"> 
+                     <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Visualisasi (Dihapus)</h2>
+                     <!-- Konten Visualisasi dihapus -->
                  </section>
             </div>
 
@@ -227,32 +236,9 @@
             </aside>
             
             <!-- BARIS BAWAH PENUH (DASBOR ANALISIS - BARIS 4) -->
-            <div class="lg:col-span-3 space-y-6 order-3 lg:order-3"> <!-- Kurangi space-y -->
-                 <section id="analysis-dashboard-section" class="hidden"> <!-- Tambahkan 'hidden' -->
-                     <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Dasbor Analisis & Visualisasi</h2>
-                     
-                     <section id="results-dashboard" class="card p-4"> <!-- Kurangi padding -->
-                        
-                        <!-- KOTAK METRIK DIHILANGKAN -->
-                        <!-- Div yang berisi tiga kartu metrik di sini telah dihapus -->
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"> <!-- Kurangi gap -->
-                            <div class="p-2"> <!-- Kurangi padding -->
-                                <h3 class="text-base font-semibold text-slate-900 mb-1">Visualisasi Proporsi</h3>
-                                <p class="text-xs text-slate-500 mb-2">Grafik ini menunjukkan perbandingan distribusi 'Variabel Y' di setiap kategori 'Variabel X'.</p>
-                                <div class="chart-container">
-                                    <canvas id="chiSquareChart"></canvas>
-                                </div>
-                            </div>
-
-                            <section id="interpretation-section" class="p-3 interpretation-box flex flex-col justify-center"> <!-- Kurangi padding -->
-                                <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Utama</h3>
-                                <p class="text-xs text-green-700 mb-2">Bagian ini menerjemahkan hasil statistik menjadi kesimpulan yang mudah dipahami berdasarkan ambang batas $p < 0.05$.</p>
-                                <p id="interpretation-text" class="text-xs text-green-700 font-medium">Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara Variabel X dan Variabel Y (p = 0.257).</p>
-                            </section>
-                        </div>
-                     </section>
-                 </section>
+            <!-- BAGIAN INI DIHAPUS DAN DIINTEGRASIKAN -->
+            <div class="lg:col-span-3 space-y-6 order-3 lg:order-3"> 
+                 <!-- Konten di sini sudah dipindahkan atau dihapus -->
             </div>
 
 
@@ -280,6 +266,7 @@
     let chiSquareChart;
     let collapseState = { axis: null, indexToCollapse: null }; // State untuk menyimpan data modal
     let stateHistory = []; // Array untuk menyimpan riwayat state
+    const ALPHA = 0.05; // Nilai signifikansi standar
 
     // Fungsi untuk membuat deep copy dari objek state
     const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
@@ -735,7 +722,6 @@
         const tempTextArea = document.createElement('textarea');
         tempTextArea.value = dataToCopy;
         document.body.appendChild(tempTextArea);
-        tempTextArea.select();
         document.execCommand('copy');
         document.body.removeChild(tempTextArea);
 
@@ -1083,37 +1069,95 @@
             container.innerHTML = '';
             return;
         }
-
-        let html = '';
         
-        // --- 1. Interpretasi Observasi Tertinggi ---
-        const maxObservedText = `Terdapat ${stats.N} kasus valid. Frekuensi observasi tertinggi adalah **${stats.maxObserved}** (${stats.maxObservedPercent.toFixed(1)}% dari total) yang terletak pada kombinasi ${state.varXName}: **${state.catXNames[stats.maxObservedLoc.i]}** dan ${state.varYName}: **${state.catYNames[stats.maxObservedLoc.j]}**.`;
+        // --- LOGIKA UTAMA INTERPRETASI PER BARIS (DALAM SATU PARAGRAF) ---
+        let interpretationContent = `Berdasarkan tabel di atas menunjukkan bahwa dari total ${stats.N} kasus valid, `;
+        let rowInterpretations = [];
+        
+        for (let i = 0; i < state.R; i++) {
+            const rowTotal = stats.Ri[i];
+            const catXName = state.catXNames[i];
+            
+            if (rowTotal === 0) continue; // Lewati baris jika total observasi 0
 
-        html += `<div class="interpretation-crosstab">
-                    <h3 class="font-bold text-slate-800 mb-1">Interpretasi Frekuensi Observasi</h3>
-                    <p class="text-xs text-slate-700">${maxObservedText}</p>
+            let rowSegments = [];
+            
+            for (let j = 0; j < state.C; j++) {
+                const obs = stats.O[i][j];
+                const percent = (obs / rowTotal * 100).toFixed(1);
+                const catYName = state.catYNames[j];
+                
+                let segment = `${obs} orang (${percent}%) yang mempunyai ${state.varYName} ${catYName}`;
+                rowSegments.push(segment);
+            }
+            
+            // Gabungkan segmen baris
+            let rowInterpretation = `dari ${rowTotal} orang yang mempunyai ${state.varXName} ${catXName} terdapat `;
+            
+            if (rowSegments.length > 1) {
+                const lastSegment = rowSegments.pop();
+                rowInterpretation += rowSegments.join(' dan ') + ` dan ${lastSegment}`;
+            } else if (rowSegments.length === 1) {
+                rowInterpretation += rowSegments[0];
+            }
+            
+            rowInterpretations.push(rowInterpretation);
+        }
+        
+        // Gabungkan semua interpretasi baris menjadi satu paragraf
+        if (rowInterpretations.length > 0) {
+            const lastRow = rowInterpretations.pop();
+            
+            // Logika gabung paragraf
+            if (rowInterpretations.length === 0) { // Hanya 1 baris
+                interpretationContent += `${lastRow}.`;
+            } else if (rowInterpretations.length === 1) { // 2 baris (kasus 2x2 paling umum)
+                interpretationContent += `${rowInterpretations[0]}, sedangkan ${lastRow}.`;
+            } else { // > 2 baris
+                interpretationContent += rowInterpretations.map((text, idx) => {
+                    return idx === rowInterpretations.length - 1 ? `${text}` : `${text}, `;
+                }).join('');
+                interpretationContent += `, sedangkan ${lastRow}.`;
+            }
+
+            // Fallback untuk 2 baris (kasus paling umum 2x2)
+            if (state.R === 2) {
+                interpretationContent = `<p class="text-xs text-slate-700">Berdasarkan tabel di atas menunjukkan bahwa dari total ${stats.N} kasus valid: ${rowInterpretations[0]}, sedangkan ${lastRow}.</p>`;
+            } else {
+                 interpretationContent = `<p class="text-xs text-slate-700">${interpretationContent.replace(/, sedangkan/, ' sedangkan')}</p>`;
+            }
+        }
+        
+        
+        // --- 1. Header dan Konten Naratif ---
+        let html = `<div class="interpretation-crosstab">
+                    <h3 class="font-bold text-slate-800 mb-1">Interpretasi</h3> <!-- JUDUL BARU -->
+                    <p class="text-xs text-slate-700">${interpretationContent}</p>
                  </div>`;
-        
-        // --- 2. Peringatan Frekuensi Harapan Rendah ---
+
+
+        // --- 2. Peringatan Frekuensi Harapan Rendah (diletakkan di bawah interpretasi naratif) ---
         if (stats.percentLowExpected > 0) {
             let warningText = `Peringatan: ${stats.lowExpectedCount} sel (${stats.percentLowExpected.toFixed(1)}%) memiliki frekuensi harapan (Expected Count) kurang dari 5.`;
 
             if (stats.percentLowExpected > 20) {
-                warningText += ` Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin **tidak valid** untuk tabel $R \\times C$ ini. Anda disarankan untuk merujuk pada **Uji Likelihood Ratio** atau mempertimbangkan penggabungan kategori.`;
-                if (stats.R === 2 && stats.C === 2) {
-                    warningText = `Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin **tidak valid**. Anda harus mengacu pada **Fisher's Exact Test** atau **Continuity Correction**.`;
+                warningText += ` Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin tidak valid untuk tabel $R \\times C$ ini. Anda disarankan untuk merujuk pada Uji Likelihood Ratio atau mempertimbangkan penggabungan kategori.`;
+                if (stats.R === 2 && state.C === 2) {
+                    warningText = `Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin tidak valid. Anda harus mengacu pada Fisher's Exact Test atau Continuity Correction.`;
                 }
             } else if (stats.percentLowExpected > 0) {
                  warningText += ` Pastikan setiap sel memiliki nilai harapan (Expected Count) minimal ${stats.minExpectedCount.toFixed(2)}.`;
             }
             
+            // Perbaikan Asumsi: Mengubah teks di sini
             html += `<div class="warning-low-count text-xs">
                         <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
                         <p class="text-yellow-700">${warningText}</p>
-                        ${(state.R > 2 || state.C > 2) ? `<p class="mt-1 text-yellow-700 font-medium">Anda dapat menggunakan fitur **Gabungkan Kategori** di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
+                        ${(state.R > 2 || state.C > 2) ? `<p class="mt-1 text-yellow-700 font-medium">Anda dapat menggunakan fitur Gabungkan Kategori di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
                     </div>`;
         } else {
-             html += `<p class="mt-2 text-xs text-green-700 font-medium">Asumsi frekuensi harapan terpenuhi (semua sel memiliki Expected Count $\\geq 5$). Uji Chi-Square Pearson valid.</p>`;
+             // Perbaikan Asumsi: Mengubah teks di sini
+             html += `<p class="mt-2 text-xs text-green-700 font-medium">Asumsi frekuensi harapan terpenuhi (semua sel memiliki Expected Count kurang dari 5). Uji Chi-Square Pearson valid.</p>`;
         }
 
         container.innerHTML = html;
@@ -1124,49 +1168,58 @@
         const sections = [
             document.getElementById('crosstab-section'), 
             document.getElementById('detailed-tests-section'), 
-            document.getElementById('analysis-dashboard-section')
+            document.getElementById('interpretation-section-main') // Tambahkan Interpretasi Utama
         ];
 
         if (!stats || stats.N === 0) {
             // Sembunyikan semua hasil jika N=0
             sections.forEach(sec => sec.classList.add('hidden'));
-
-            // Reset metrik
-            // document.getElementById('metric-chi-square').textContent = '-'; // Dihapus dari UI
-            // document.getElementById('metric-p-value').textContent = '-'; // Dihapus dari UI
-            // document.getElementById('metric-df').textContent = '-'; // Dihapus dari UI
             return;
         }
 
         // Tampilkan semua hasil jika N > 0
         sections.forEach(sec => sec.classList.remove('hidden'));
 
-        // document.getElementById('metric-chi-square').textContent = stats.chiSquare.toFixed(3); // Dihapus dari UI
-        // document.getElementById('metric-p-value').textContent = formatPValue(stats.pValue); // Dihapus dari UI
-        // document.getElementById('metric-df').textContent = stats.df; // Dihapus dari UI
-
+        const chiSquareValue = stats.chiSquare.toFixed(3);
         const p = stats.pValue;
+        const interpSection = document.getElementById('interpretation-section-main');
         const interpText = document.getElementById('interpretation-text');
         
-        const pValueText = isNaN(p) ? 'P-Value tidak dapat dihitung' : `p = ${formatPValue(p)}`;
+        // Format p-value dan tentukan perbandingan
+        const pValueFormatted = formatPValue(p);
+        const pValueComparison = (p < ALPHA && !isNaN(p)) ? `< α (0.05)` : `> α (0.05)`; // Ganti \alpha menjadi α dan $p < 0.05$ menjadi p < 0.05
+        
+        const removeClasses = ['bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500', 'bg-slate-100', 'border-slate-400']; 
+        let addClasses; 
+        
+        let conclusion;
+        
 
-        if (stats.df === 0) {
-            interpText.textContent = `Derajat kebebasan (df) adalah 0. Chi-Square tidak dapat dihitung.`;
-            interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500');
-            interpText.parentElement.classList.add('bg-slate-100', 'border-slate-400');
-        } else if (isNaN(p)) {
-             interpText.textContent = `Terjadi kesalahan saat menghitung P-Value Chi-Square. Pastikan data frekuensi valid.`;
-             interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500');
-             interpText.parentElement.classList.add('bg-slate-100', 'border-slate-400');
-        } else if (p < 0.05) {
-            interpText.parentElement.classList.remove('bg-green-50', 'border-green-500', 'bg-slate-100', 'border-slate-400');
-            interpText.parentElement.classList.add('bg-red-50', 'border-red-500');
-            interpText.innerHTML = `<span class="font-bold">Hasil Signifikan:</span> Dengan tingkat signifikansi 0.05, terdapat bukti yang cukup untuk menyatakan adanya hubungan statistik yang signifikan antara ${state.varXName} dan ${state.varYName} (${pValueText}).`;
+        if (stats.df === 0 || isNaN(p)) {
+            conclusion = `Derajat kebebasan (df) adalah 0 atau terjadi kesalahan perhitungan. Interpretasi hubungan tidak dapat dilakukan.`;
+            addClasses = ['bg-slate-100', 'border-slate-400'];
         } else {
-            interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500');
-            interpText.parentElement.classList.add('bg-green-50', 'border-green-500');
-            interpText.innerHTML = `<span class="font-bold">Hasil Tidak Signifikan:</span> Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara ${state.varXName} dan ${state.varYName} (${pValueText}).`;
+            if (p < ALPHA) {
+                // p < 0.05 (Signifikan)
+                conclusion = `Sehingga signifikan, jadi Ho ditolak dan Ha diterima, yang berarti ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
+                addClasses = ['bg-red-50', 'border-red-500'];
+            } else {
+                // p >= 0.05 (Tidak Signifikan)
+                conclusion = `Sehingga tidak signifikan, jadi Ho diterima dan Ha ditolak, yang berarti tidak ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
+                addClasses = ['bg-green-50', 'border-green-500'];
+            }
         }
+        
+        // Hapus kelas lama
+        interpSection.classList.remove(...removeClasses);
+        // Tambahkan kelas baru
+        interpSection.classList.add(...addClasses);
+
+        // Template Kalimat Utama
+        let mainSentence = `Berdasarkan hasil uji pearson chi-square menunjukkan bahwa nilai $\\chi2$ = ${chiSquareValue} dengan p value = ${pValueFormatted} ${pValueComparison}, ${conclusion}`; // Ganti \chi^2 menjadi \chi2
+
+        // Terapkan teks
+        interpText.innerHTML = mainSentence;
     };
     
     const renderCrosstab = (stats) => {
@@ -1261,57 +1314,8 @@
     };
 
     const renderChart = (stats) => {
-        const ctx = document.getElementById('chiSquareChart').getContext('2d');
-        if (!stats || stats.N === 0) { if (chiSquareChart) chiSquareChart.destroy(); return; }
-
-        const datasets = state.catYNames.map((name, j) => {
-            return {
-                label: name,
-                data: state.catXNames.map((_, i) => stats.O[i][j]),
-                backgroundColor: ['#34d399', '#fbbf24', '#60a5fa', '#f87171'][j % 4],
-                borderColor: ['#059669', '#d97706', '#2563eb', '#dc2626'][j % 4],
-                borderWidth: 1
-            };
-        });
-
-        if (chiSquareChart) {
-            chiSquareChart.data.labels = state.catXNames;
-            chiSquareChart.data.datasets = datasets;
-            chiSquareChart.update();
-        } else {
-            chiSquareChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: state.catXNames,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) {
-                                        const total = context.chart.data.datasets.reduce((sum, ds) => sum + ds.data[context.dataIndex], 0);
-                                        const percentage = total > 0 ? (context.parsed.y / total * 100).toFixed(1) + '%' : '0.0%';
-                                        label += `${context.parsed.y} (${percentage})`;
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { stacked: true, grid: { display: false } },
-                        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Jumlah Frekuensi' } }
-                    }
-                }
-            });
-        }
+        // FUNGSI INI DIHAPUS KARENA VISUALISASI DIHILANGKAN
+        return; 
     };
     
     const renderAll = () => {
@@ -1325,9 +1329,12 @@
         const sections = [
             document.getElementById('crosstab-section'), 
             document.getElementById('detailed-tests-section'), 
-            document.getElementById('analysis-dashboard-section')
+            document.getElementById('interpretation-section-main') // Tambahkan Interpretasi Utama
         ];
-        
+
+        // Sembunyikan bagian 4 (Dasbor Analisis) karena sudah kosong
+        // Note: Bagian 4 sudah dihapus, section ID di atas sudah di update
+
         sections.forEach(sec => {
             if (hasData) {
                 sec.classList.remove('hidden');
@@ -1339,7 +1346,7 @@
         renderResults(stats);
         renderCrosstab(stats);
         renderDetailedTable(stats);
-        renderChart(stats);
+        // renderChart(stats); // Panggilan Chart dihapus
     };
 
     document.addEventListener('DOMContentLoaded', () => {
