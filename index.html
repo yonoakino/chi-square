@@ -55,7 +55,7 @@
     <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
 
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Dasbor Analisis Chi-Square Interaktif</h1>
+            <h1 class="4xl font-extrabold text-slate-900 tracking-tight">Dasbor Analisis Chi-Square Interaktif</h1>
             <p class="mt-2 text-lg text-slate-600">Analisis hubungan antara variabel kategoris secara real-time.</p>
         </header>
 
@@ -549,6 +549,9 @@
     }
 
     const performCollapse = (axis, indexToCollapse, targetIndex) => {
+        // Pastikan frekuensi sudah terbaca sebelum operasi penggabungan
+        handleInputChange({target: {}});
+
         if (axis === 'R') { // Menggabungkan Baris (Variabel X)
             if (state.R <= 2) return alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
             
@@ -571,7 +574,7 @@
         } else if (axis === 'C') { // Menggabungkan Kolom (Variabel Y)
             if (state.C <= 2) return alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
 
-            // Gabungkan frekuensi
+            // Gabungkan frekuensi dan hapus kolom yang digabungkan dari semua baris
             for (let i = 0; i < state.R; i++) {
                 state.frequencies[i][targetIndex] += state.frequencies[i][indexToCollapse];
                 state.frequencies[i].splice(indexToCollapse, 1);
@@ -634,6 +637,7 @@
             // Kolom Gabungkan (Baris)
             catHtml += `<div class="flex items-center space-x-1">`;
             if (state.R > 2) {
+                // Tombol gabung X selalu di baris yang terpengaruh
                 catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
             } else {
                  catHtml += `<span>-</span>`;
@@ -660,6 +664,7 @@
                 // Kolom Gabungkan (Kolom Y)
                 catHtml += `<div class="flex items-center space-x-1">`;
                 if (state.C > 2) {
+                     // Tombol gabung Y untuk kategori yang tersisa
                      catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
                 } else {
                      catHtml += `<span>-</span>`;
@@ -670,13 +675,15 @@
             }
         }
         
-        // Tambahkan tombol Gabung Kolom di bawah input baris
+        // Tombol Gabung Kolom untuk baris yang sejajar dengan input X (Jika C<=R)
         if (state.C > 2 && state.C <= state.R) {
-            catHtml += `<div class="mt-4"><h4 class="text-sm font-semibold mb-1">Gabungkan Kolom (Variabel Y):</h4>`;
             for (let j = 0; j < state.C; j++) {
-                 catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200 mr-2 mb-2" title="Gabungkan kategori ${state.catYNames[j]}">${state.catYNames[j]} [Gabung]</button>`;
+                 catHtml += `<div class="category-input-grid">
+                                <label class="category-row-label self-center"></label>
+                                <div></div>
+                                <div class="col-start-3"><button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200 w-full" title="Gabungkan kategori ${state.catYNames[j]}">Gabung Y</button></div>
+                             </div>`;
             }
-            catHtml += `</div>`;
         }
 
 
@@ -692,7 +699,7 @@
                 
                 // Filter kategori yang tidak bisa digabungkan (yaitu diri sendiri)
                 const options = targetCategories
-                    .map((name, index) => ({ name, index }))
+                    .map((name, index) => ({ name, index: index }))
                     .filter(opt => opt.index !== indexToCollapse);
 
                 if (options.length === 0) {
@@ -701,15 +708,16 @@
                 }
                 
                 // Menggunakan prompt untuk memilih target gabung
-                const promptMsg = `Anda akan menggabungkan '${targetCategories[indexToCollapse]}' (${axis} - ${indexToCollapse + 1}).\n\nMasukkan nomor kategori (1 sampai ${targetCategories.length}) yang akan menjadi target gabung:\n${options.map(o => `${o.index + 1}: ${o.name}`).join('\n')}`;
+                const promptMsg = `Anda akan menggabungkan '${targetCategories[indexToCollapse]}' (${axis} - ${indexToCollapse + 1}).\n\nMasukkan nomor kategori (berdasarkan daftar di bawah) yang akan menjadi TARGET GABUNG:\n${options.map(o => `${o.index + 1}: ${o.name}`).join('\n')}`;
                 
                 const rawTargetIndex = prompt(promptMsg);
                 if (rawTargetIndex === null || rawTargetIndex.trim() === '') return;
                 
                 const targetCatIndex = parseInt(rawTargetIndex.trim()) - 1;
 
-                if (targetCatIndex === indexToCollapse || targetCatIndex < 0 || (axis === 'R' && targetCatIndex >= state.R) || (axis === 'C' && targetCatIndex >= state.C)) {
-                     alert("Pilihan tidak valid atau target sama dengan kategori yang akan digabungkan.");
+                // FIX: Tambahkan check isNaN dan sederhanakan validasi target index
+                if (isNaN(targetCatIndex) || targetCatIndex < 0 || targetCatIndex >= targetCategories.length || targetCatIndex === indexToCollapse) {
+                     alert("Pilihan tidak valid. Silakan masukkan nomor kategori yang valid (1 sampai " + targetCategories.length + ") yang BUKAN kategori yang akan digabungkan.");
                      return;
                 }
                 
