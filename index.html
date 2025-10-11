@@ -65,6 +65,30 @@
             padding: 0.25rem 0.5rem;
             margin-bottom: 0.5rem;
         }
+
+        /* Styling untuk Tabel Spreadsheet (Memastikan mudah disalin) */
+        .spreadsheet-table {
+            border-collapse: collapse; 
+            border: 1px solid #d1d5db; 
+            font-size: 0.875rem;
+        }
+        .spreadsheet-table th, .spreadsheet-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        /* Styling untuk Tabel Data Mentah (Raw Data) */
+        .raw-data-table {
+            border-collapse: collapse; 
+            border: 1px solid #d1d5db; 
+            font-size: 0.875rem;
+        }
+        .raw-data-table th, .raw-data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: left;
+        }
         
     </style>
 </head>
@@ -78,7 +102,7 @@
             <p class="mt-2 text-lg text-slate-600">Analisis hubungan antara variabel kategoris secara real-time.</p>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <main class="grid grid-cols-1 lg:col-span-3 gap-8">
 
             <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
             <div class="lg:col-span-2 space-y-8 order-2 lg:order-2">
@@ -153,11 +177,27 @@
                     <hr class="my-6">
                     
                     <div id="category-names-container" class="space-y-4"></div>
+                    
+                    <!-- KOTAK BARU UNTUK PENGKODEAN -->
+                    <hr class="my-6">
+                    <h3 class="text-md font-semibold text-slate-800 mb-3">Pengkodean</h3>
+                    <div id="coding-panel-container" class="space-y-4"></div>
 
                     <hr class="my-6">
 
                     <h3 class="text-md font-semibold text-slate-800 mb-3">Tabel Frekuensi Observasi</h3>
                     <div id="frequency-table-container"></div>
+                    
+                    <!-- TABEL SPREADSHEET DIHILANGKAN -->
+                    
+                    <!-- KOTAK BARU UNTUK DATA MENTAH -->
+                    <h3 class="text-md font-semibold text-slate-800 mb-3 mt-6">Tabel Data Mentah (Kode Numerik)</h3>
+                    <div id="raw-data-header-container" class="flex justify-between items-center mb-2">
+                        <p class="text-xs text-slate-500">Data acak, siap disalin ke perangkat lunak statistik.</p>
+                        <button id="copy-raw-data-btn" class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition">Salin Data Mentah</button>
+                    </div>
+                    <div id="raw-data-view-container" class="card p-2 overflow-x-auto max-h-96"></div>
+
                 </div>
             </aside>
             
@@ -258,6 +298,9 @@
         varYName: "Variabel Y",
         catXNames: ["Kategori A", "Kategori B"], 
         catYNames: ["Kategori C", "Kategori D"], 
+        // Tambahkan array untuk menyimpan kode numerik
+        catXCodes: ["0", "1"],
+        catYCodes: ["0", "1"],
         frequencies: [
             [7, 6],
             [7, 13]
@@ -386,7 +429,7 @@
             }
         }
         return { twoSided: twoSidedP };
-    }
+    };
 
     const calculateStatistics = () => {
         const O = state.frequencies;
@@ -501,27 +544,41 @@
         // Baca semua input yang ada sebelum dirender ulang untuk memuat data terkini
         let currentCatXNames = [];
         let currentCatYNames = [];
+        let currentCatXCodes = [];
+        let currentCatYCodes = [];
         
         for (let i = 0; i < oldR; i++) {
-            const el = document.getElementById(`catX_name_${i}`);
-            if (el) currentCatXNames[i] = el.value;
-        }
-        for (let j = 0; j < oldC; j++) {
-            const el = document.getElementById(`catY_name_${j}`);
-            if (el) currentCatYNames[j] = el.value;
+            const elXName = document.getElementById(`catX_name_${i}`);
+            if (elXName) currentCatXNames[i] = elXName.value;
+            const elXCode = document.getElementById(`catX_code_${i}`);
+            if (elXCode) currentCatXCodes[i] = elXCode.value;
+
+            const elYName = document.getElementById(`catY_name_${i}`);
+            if (elYName) currentCatYNames[i] = elYName.value;
+            const elYCode = document.getElementById(`catY_code_${i}`);
+            if (elYCode) currentCatYCodes[i] = elYCode.value;
         }
 
         // Resize dan isi nama default, mempertahankan nama lama
         state.catXNames = Array(state.R).fill().map((_, i) => {
              if (i < oldR) return currentCatXNames[i];
-             // Set default baru
-             return i === 0 ? "Kategori A" : (i === 1 ? "Kategori B" : `Kategori ${i+1}`);
+             return i === 0 ? "Kategori A" : i === 1 ? "Kategori B" : `Kategori ${i+1}`;
         });
         state.catYNames = Array(state.C).fill().map((_, j) => {
              if (j < oldC) return currentCatYNames[j];
-             // Set default baru
-             return j === 0 ? "Kategori C" : (j === 1 ? "Kategori D" : `Kategori ${j+1}`);
+             return j === 0 ? "Kategori C" : j === 1 ? "Kategori D" : `Kategori ${j+1}`;
         });
+        
+        // Resize dan isi kode default (0, 1, 2, ...)
+        state.catXCodes = Array(state.R).fill().map((_, i) => {
+             if (i < oldR) return currentCatXCodes[i] || String(i);
+             return String(i);
+        });
+        state.catYCodes = Array(state.C).fill().map((_, j) => {
+             if (j < oldC) return currentCatYCodes[j] || String(j);
+             return String(j);
+        });
+
 
         // Resize dan isi frekuensi default, mempertahankan data lama
         const newFrequencies = Array(state.R).fill().map(() => Array(state.C).fill(0));
@@ -550,14 +607,18 @@
         state.varXName = document.getElementById('varX_name').value;
         state.varYName = document.getElementById('varY_name').value;
         
-        // Baca nama kategori
+        // Baca nama kategori dan kode
         for (let i = 0; i < state.R; i++) {
-            const el = document.getElementById(`catX_name_${i}`);
-            if(el) state.catXNames[i] = el.value;
+            const elXName = document.getElementById(`catX_name_${i}`);
+            if(elXName) state.catXNames[i] = elXName.value;
+            const elXCode = document.getElementById(`catX_code_${i}`);
+            if(elXCode) state.catXCodes[i] = elXCode.value;
         }
         for (let j = 0; j < state.C; j++) {
-            const el = document.getElementById(`catY_name_${j}`);
-            if(el) state.catYNames[j] = el.value;
+            const elYName = document.getElementById(`catY_name_${j}`);
+            if(elYName) state.catYNames[j] = elYName.value;
+            const elYCode = document.getElementById(`catY_code_${j}`);
+            if(elYCode) state.catYCodes[j] = elYCode.value;
         }
         
         // Baca frekuensi
@@ -574,10 +635,16 @@
         if (changedId === 'varX_name' || changedId === 'varY_name') {
              renderInputPanel();
         } else {
-             // Jika yang diubah adalah Nama Kategori atau Frekuensi,
+             // Jika yang diubah adalah Nama Kategori, Kode, atau Frekuensi,
              // PERBAIKAN: Hanya perbarui header variabel di panel input dan render ulang tabel frekuensi
              document.querySelector('#category-names-container .category-header-col-2').textContent = state.varXName;
              document.querySelector('#category-names-container .category-header-col-3').textContent = state.varYName;
+             
+             // Perbarui header panel pengkodean juga
+             const codingHeaderX = document.querySelector('#coding-panel-container .coding-header-col-2');
+             if(codingHeaderX) codingHeaderX.textContent = state.varXName;
+             const codingHeaderY = document.querySelector('#coding-panel-container .coding-header-col-3');
+             if(codingHeaderY) codingHeaderY.textContent = state.varYName;
              
              // Panggil fungsi rendering khusus untuk Tabel Frekuensi agar nama kategori di kolom dan baris di tabel frekuensi terupdate
              renderFrequencyTableOnly();
@@ -612,6 +679,151 @@
         
         // Pasang kembali listener ke input frekuensi yang BARU dibuat
         document.querySelectorAll('#frequency-table-container input').forEach(el => el.addEventListener('input', handleInputChange));
+        
+        // Perbarui tampilan data mentah
+        renderRawDataView(); 
+    }
+    
+    // FUNGSI BARU: Merender Panel Pengkodean
+    const renderCodingPanel = () => {
+        const codingContainer = document.getElementById('coding-panel-container');
+        
+        let codingHtml = `<div class="category-input-grid mb-2">
+            <span class="category-row-label"></span>
+            <span class="category-header-col-2 coding-header-col-2">${state.varXName}</span>
+            <span class="category-header-col-3 coding-header-col-3">${state.varYName}</span>
+            <span class="category-header-col-4">Kode</span>
+        </div>`;
+        
+        const maxDim = Math.max(state.R, state.C);
+        
+        for(let k = 0; k < maxDim; k++) {
+             codingHtml += `<div class="category-input-grid">`;
+             codingHtml += `<label class="category-row-label self-center">Kategori ${k+1}</label>`; 
+
+             // Input Kode X
+             if (k < state.R) {
+                 codingHtml += `<div><input type="text" id="catX_code_${k}" value="${state.catXCodes[k]}" class="label-input-style text-center"></div>`;
+             } else {
+                 codingHtml += `<div></div>`;
+             }
+             
+             // Input Kode Y
+             if (k < state.C) {
+                 codingHtml += `<div><input type="text" id="catY_code_${k}" value="${state.catYCodes[k]}" class="label-input-style text-center"></div>`;
+             } else {
+                 codingHtml += `<div></div>`;
+             }
+             
+             // Kode Numerik (Label)
+             codingHtml += `<div><span class="font-medium text-slate-700">Kode: ${k}</span></div>`;
+             
+             codingHtml += `</div>`;
+        }
+        
+        codingContainer.innerHTML = codingHtml;
+
+        // Pasang listener untuk input Kode
+        document.querySelectorAll('#coding-panel-container input').forEach(el => el.addEventListener('input', handleInputChange));
+
+    }
+
+
+    // FUNGSI BARU: Mengacak array menggunakan Fisher-Yates Shuffle
+    const shuffleArray = (array) => {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+    
+    // FUNGSI BARU: Menyalin data mentah ke clipboard
+    const copyRawData = () => {
+        const rawObservations = [];
+        const R = state.R, C = state.C;
+        
+        // Dihapus: rawObservations.push(`${state.varXName}\t${state.varYName}`);
+        // KEPUTUSAN: Tidak menyalin header agar data siap di-paste tanpa perlu menghapus baris pertama
+
+        // Kumpulkan semua observasi menjadi satu array
+        for (let i = 0; i < R; i++) {
+            for (let j = 0; j < C; j++) {
+                const count = state.frequencies[i][j];
+                const codeX = state.catXCodes[i];
+                const codeY = state.catYCodes[j];
+
+                for (let k = 0; k < count; k++) {
+                    rawObservations.push(`${codeX}\t${codeY}`);
+                }
+            }
+        }
+        
+        // Acak urutan observasi
+        // Catatan: Header tidak ikut diacak karena sudah tidak dimasukkan ke rawObservations
+        shuffleArray(rawObservations);
+        
+        // Gabungkan dengan newline
+        const dataToCopy = rawObservations.join('\n');
+
+        // Salin ke clipboard
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = dataToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+
+        // Feedback visual
+        const button = document.getElementById('copy-raw-data-btn');
+        const originalText = button.textContent;
+        button.textContent = 'Data Tersalin!';
+        setTimeout(() => {
+            button.textContent = originalText;
+        }, 1500);
+    }
+
+
+    // FUNGSI BARU: Merender Tabel Data Mentah (Raw Data) secara acak menggunakan kode
+    const renderRawDataView = () => {
+        const rawDataContainer = document.getElementById('raw-data-view-container');
+        // PERHATIAN: Header Tabel di sini masih perlu agar pengguna tahu kolom mana yang mana
+        let rawDataHtml = `<table class="raw-data-table w-full"><thead><tr>
+                            <th class="bg-slate-200">${state.varXName}</th>
+                            <th class="bg-slate-200">${state.varYName}</th>
+                         </tr></thead><tbody>`;
+
+        const rawObservations = [];
+        let totalCount = 0;
+        const R = state.R, C = state.C;
+
+        // 1. Kumpulkan semua observasi kode numerik
+        for (let i = 0; i < R; i++) {
+            for (let j = 0; j < C; j++) {
+                const count = state.frequencies[i][j];
+                const codeX = state.catXCodes[i];
+                const codeY = state.catYCodes[j];
+                totalCount += count;
+
+                for (let k = 0; k < count; k++) {
+                    rawObservations.push({ x: codeX, y: codeY });
+                }
+            }
+        }
+        
+        // 2. Acak urutan observasi (Fisher-Yates Shuffle)
+        shuffleArray(rawObservations);
+
+        // 3. Render array yang sudah diacak
+        rawObservations.forEach(obs => {
+            rawDataHtml += `<tr><td>${obs.x}</td><td>${obs.y}</td></tr>`;
+        });
+        
+        if (totalCount === 0) {
+             rawDataHtml += `<tr><td colspan="2" class="text-center text-slate-500">Masukkan frekuensi observasi untuk membuat data mentah.</td></tr>`;
+        }
+
+        rawDataHtml += `</tbody></table>`;
+        rawDataContainer.innerHTML = rawDataHtml;
     }
 
     // Fungsi yang dipanggil saat tombol Gabung diklik
@@ -684,6 +896,10 @@
             // Gabungkan nama kategori
             state.catXNames[targetIndex] += `/${state.catXNames[indexToCollapse]}`;
             state.catXNames.splice(indexToCollapse, 1);
+            
+            // Hapus kode yang digabungkan (kode baru akan tetap berada di targetIndex)
+            state.catXCodes.splice(indexToCollapse, 1);
+
 
             // Update dimensi
             state.R--;
@@ -701,6 +917,9 @@
             // Gabungkan nama kategori
             state.catYNames[targetIndex] += `/${state.catYNames[indexToCollapse]}`;
             state.catYNames.splice(indexToCollapse, 1);
+            
+            // Hapus kode yang digabungkan
+            state.catYCodes.splice(indexToCollapse, 1);
 
             // Update dimensi
             state.C--;
@@ -721,6 +940,9 @@
         document.getElementById('varX_name').addEventListener('input', handleInputChange);
         document.getElementById('varY_name').addEventListener('input', handleInputChange);
         
+        // Listener untuk Tombol Copy
+        document.getElementById('copy-raw-data-btn').addEventListener('click', copyRawData);
+        
         // Listener untuk Modal
         document.getElementById('confirm-collapse').addEventListener('click', confirmCollapse);
         document.getElementById('cancel-collapse').addEventListener('click', () => {
@@ -730,6 +952,7 @@
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
+        const codingContainer = document.getElementById('coding-panel-container');
 
         // Render input nama kategori
         let catHtml = `<h3 class="text-md font-semibold text-slate-800 mb-3">Nama Kategori</h3>`;
@@ -847,7 +1070,8 @@
         });
 
 
-        // Panggil renderFrequencyTableOnly di sini untuk memastikan tabel frekuensi pertama kali dimuat
+        // Panggil renderCodingPanel dan renderFrequencyTableOnly
+        renderCodingPanel();
         renderFrequencyTableOnly();
 
         // Tambahkan listener untuk input kategori yang BARU dibuat (input Frekuensi dipasang di renderFrequencyTableOnly)
@@ -1091,6 +1315,9 @@
         // Atur state awal dan setup listener utama
         state.catXNames = Array(state.R).fill().map((_, i) => i < 2 ? (i === 0 ? "Kategori A" : "Kategori B") : `Kategori ${i+1}`);
         state.catYNames = Array(state.C).fill().map((_, j) => j < 2 ? (j === 0 ? "Kategori C" : "Kategori D") : `Kategori ${j+1}`);
+        state.catXCodes = Array(state.R).fill().map((_, i) => String(i));
+        state.catYCodes = Array(state.C).fill().map((_, j) => String(j));
+
         setupListeners(); 
         handleDimensionChange(); // Panggil ini untuk inisialisasi awal DOM dan hasil
     });
