@@ -10,7 +10,7 @@
         - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Cara paling intuitif untuk input data tabular. -> Metode: Vanilla JS.
         - Laporan Info: Frekuensi per kategori. -> Goal: Membandingkan proporsi secara visual. -> Viz/Metode: Grafik Batang Bertumpuk (Stacked Bar Chart). -> Interaksi: Grafik diperbarui secara dinamis, tooltip menampilkan detail. -> Justifikasi: Sangat efektif untuk menunjukkan hubungan bagian-ke-keseluruhan dan membandingkannya antar grup. -> Library: Chart.js (Canvas).
         - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
-        - Laporan Info: P-value. -> Goal: Memberikan interpretasi yang mudah dipahami. -> Viz/Metode: Blok teks dinamis. -> Interaksi: Teks berubah (signifikan/tidak signifikan) berdasarkan ambang batas p-value. -> Justifikasi: Menerjemahkan angka statistik menjadi kesimpulan yang dapat ditindaklanjutkan, sangat penting untuk pemahaman pengguna. -> Metode: Vanilla JS.
+        - Laporan Info: P-value. -> Goal: Memberikan interpretasi yang mudah dipahami. -> Viz/Metode: Blok teks dinamis. -> Interaksi: Teks berubah (signifikan/tidak signifikan) berdasarkan ambang batas p-value. -> Justifikasi: Menerjemahkan angka statistik menjadi kesimpulan yang dapat ditindaklanjuti, sangat penting untuk pemahaman pengguna. -> Metode: Vanilla JS.
         - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS), memberikan kredibilitas dan detail yang diperlukan oleh para ahli. -> Metode: Vanilla JS.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
@@ -619,7 +619,11 @@
     };
 
     const handleInputChange = (event) => {
-        // Hanya baca nama variabel, nama kategori, dan frekuensi dari DOM yang sudah ada.
+        const target = event.target;
+        const changedId = target.id;
+        const cursorPosition = target.selectionStart; // Simpan posisi kursor
+
+        // 1. Baca data dari DOM ke state (sebelum rendering)
         state.varXName = document.getElementById('varX_name').value;
         state.varYName = document.getElementById('varY_name').value;
         
@@ -645,18 +649,20 @@
             }
         }
         
-        const changedId = event.target.id;
+        // 2. Render Panel Input untuk update header variabel/tombol UNDO
+        renderInputPanel();
 
-        // Jika yang diubah adalah Nama Variabel Utama, render ulang seluruh panel input (untuk header)
-        if (changedId === 'varX_name' || changedId === 'varY_name') {
-             renderInputPanel();
-        } else {
-             // Jika yang diubah adalah Nama Kategori, Kode, atau Frekuensi,
-             // PERBAIKAN: Hanya perbarui header variabel di panel input dan render ulang tabel frekuensi
-             // Note: Karena kode sudah digabung, kita tidak perlu lagi memisahkan header di sini. Cukup panggil renderInputPanel().
-             renderInputPanel();
+        // 3. Kembalikan fokus dan posisi kursor hanya jika yang diubah adalah input kategori/kode
+        if (changedId.startsWith('catX_name_') || changedId.startsWith('catY_name_') || 
+            changedId.startsWith('catX_code_') || changedId.startsWith('catY_code_')) {
+            const newElement = document.getElementById(changedId);
+            if (newElement) {
+                newElement.focus();
+                newElement.selectionStart = cursorPosition;
+                newElement.selectionEnd = cursorPosition;
+            }
         }
-
+        
         renderAll();
     };
     
@@ -677,7 +683,7 @@
             freqHtml += `<tr class="border-t border-slate-200"><td class="font-medium text-slate-600 py-2 pr-2">${state.catXNames[i]}</td>`;
             for (let j = 0; j < state.C; j++) {
                 // Input Frekuensi (mempertahankan value lama)
-                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${state.frequencies[i][j]}" min="0" class="input-style"></td>`;
+                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${state.frequencies[i][j]}" min="0" class="input-style text-xs"></td>`;
             }
             freqHtml += `</tr>`;
         }
