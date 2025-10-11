@@ -275,16 +275,16 @@
         <!-- Menghilangkan `bg-white/90 backdrop-blur-sm shadow-2xl border-t border-slate-200 rounded-t-lg` -->
         
         <!-- Tombol Crosstab -->
-        <button id="toggle-crosstab-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Tabel Kontingensi">Tabel Kontingensi</button>
+        <button id="toggle-crosstab-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Tabel Kontingensi">Crosstab</button>
         
         <!-- Tombol Detailed -->
-        <button id="toggle-detailed-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Hasil Uji Statistik Rinci">Hasil Uji Statistik</button>
+        <button id="toggle-detailed-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Hasil Uji Statistik Rinci">Hasil</button>
 
         <!-- Tombol Toggle Raw Data -->
-        <button id="toggle-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
+        <button id="toggle-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data</button>
 
         <!-- Tombol Copy Raw Data -->
-        <button id="copy-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Salin data mentah (long format) ke clipboard">Salin Data Mentah</button>
+        <button id="copy-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Salin data mentah (long format) ke clipboard">Copy Data</button>
     </div>
     <!-- END FLOATING BUTTONS -->
 
@@ -971,7 +971,7 @@
             // Warna tombol saat TERBUKA (diubah menjadi warna netral)
             button.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
             button.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
-            button.textContent = 'Sembunyikan Data'; 
+            button.textContent = 'Tutup Data'; 
         } else {
             container.classList.add('hidden');
             // Warna tombol saat TERTUTUP (diubah menjadi hijau pekat/solid)
