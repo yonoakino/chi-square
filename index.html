@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dasbor Analisis Chi-Square Interaktif</title>
     <!-- Chosen Palette: Calm Neutrals & Sage -->
-    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci dan Interpretasi, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi). Perubahan terbaru memprioritaskan penyajian output statistik formal dan interpretasi tekstual secara langsung. -->
+    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci dan Interpretasi, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi). Perubahan terbaru memprioritiskan penyajian output statistik formal dan interpretasi tekstual secara langsung. -->
     <!-- Visualization & Content Choices: 
         - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Cara paling intuitif untuk input data tabular. -> Metode: Vanilla JS.
         - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
@@ -109,30 +109,16 @@
         }
         
         /* Accordion Style */
-        .accordion-header {
+        /* Hapus style accordion lama atau re-implementasi sebagai toggler */
+        .toggler-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
             padding: 0.75rem 1rem;
             background-color: #f3f4f6; /* slate-100 */
             border-radius: 0.5rem;
-            transition: background-color 0.2s;
-        }
-        .accordion-header:hover {
-            background-color: #e5e7eb; /* slate-200 */
-        }
-        .accordion-content {
-            padding: 1rem;
             border: 1px solid #e5e7eb;
-            border-top: none;
-            border-radius: 0 0 0.5rem 0.5rem;
-        }
-        .arrow-icon {
-            transition: transform 0.3s;
-        }
-        .rotated {
-            transform: rotate(90deg);
+            margin-bottom: 0.5rem; /* Tambahkan sedikit margin bawah untuk pemisahan */
         }
         
     </style>
@@ -152,31 +138,32 @@
             <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
             <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> <!-- Kurangi space-y -->
                 
-                 <section id="crosstab-section" class="hidden card p-0"> <!-- Ubah menjadi card tanpa padding -->
-                     <div id="crosstab-header" class="accordion-header"> <!-- Hapus onclick -->
-                         <h2 class="text-xl font-bold text-slate-900">2. Tabel Kontingensi (Crosstabulation)</h2>
-                         <svg id="crosstab-arrow" class="w-5 h-5 text-slate-600 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                     </div>
-                     <div id="crosstab-content" class="accordion-content hidden">
-                         <div class="overflow-x-auto">
+                <section id="crosstab-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
+                    <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
+                        <h3 class="text-xl font-bold text-slate-900">2. Tabel Kontingensi (Crosstabulation)</h3>
+                        <!-- TOMBOL TOGGLE ASLI DIHAPUS, DIPINDAHKAN KE PANEL INPUT -->
+                    </div>
+                    <!-- Konten Tabel Crosstabulation -->
+                    <div id="crosstab-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
+                        <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead id="crosstab-head"></thead>
                                 <tbody id="crosstab-body" class="divide-y divide-slate-200"></tbody>
                             </table>
-                         </div>
-                         <!-- Kontainer Interpretasi Crosstabulation -->
-                         <div id="crosstab-interpretation-container"></div>
-                     </div>
-                 </section>
+                        </div>
+                        <!-- Kontainer Interpretasi Crosstabulation -->
+                        <div id="crosstab-interpretation-container"></div>
+                    </div>
+                </section>
                 
-                 <section id="detailed-tests-section" class="hidden card p-0"> <!-- Tambahkan 'hidden' dan ubah jadi card p-0 -->
-                     <div id="detailed-header" class="accordion-header">
-                         <h2 class="text-xl font-bold text-slate-900">3. Hasil Uji Statistik Rinci</h2>
-                         <svg id="detailed-arrow" class="w-5 h-5 text-slate-600 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                     </div>
-                     <div id="detailed-content" class="accordion-content hidden">
-                         <div class="card overflow-hidden">
-                             <div class="overflow-x-auto">
+                <section id="detailed-tests-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
+                    <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
+                        <h3 class="text-xl font-bold text-slate-900">3. Hasil Uji Statistik Rinci</h3>
+                        <!-- TOMBOL TOGGLE ASLI DIHAPUS, DIPINDAHKAN KE PANEL INPUT -->
+                    </div>
+                    <div id="detailed-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
+                        <div class="card overflow-hidden">
+                            <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
                                     <thead class="bg-slate-50">
                                         <tr>
@@ -189,21 +176,21 @@
                                     </thead>
                                     <tbody id="detailed-tests-body" class="bg-white divide-y divide-slate-200"></tbody>
                                 </table>
-                             </div>
-                         </div>
-                         <!-- KOTAK INTERPRETASI UTAMA DIPINDAH KE SINI -->
-                         <section id="interpretation-section-main" class="mt-4 p-3 interpretation-box">
+                            </div>
+                        </div>
+                        <!-- KOTAK INTERPRETASI UTAMA DIPINDAH KE SINI -->
+                        <section id="interpretation-section-main" class="mt-4 p-3 interpretation-box">
                             <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Uji Statistik</h3>
                             <p id="interpretation-text" class="text-xs text-green-700 font-medium">Interpretasi akan muncul di sini setelah Anda memasukkan data.</p>
-                         </section>
-                     </div>
-                 </section>
+                        </section>
+                    </div>
+                </section>
                 
-                 <!-- BAGIAN 4 DIHAPUS (HANYA DIBIARKAN KONTEN KOSONG) -->
-                 <section id="analysis-dashboard-section" class="hidden"> 
-                     <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Visualisasi (Dihapus)</h2>
-                     <!-- Konten Visualisasi dihapus -->
-                 </section>
+                <!-- BAGIAN 4 DIHAPUS (HANYA DIBIARKAN KONTEN KOSONG) -->
+                <section id="analysis-dashboard-section" class="hidden"> 
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Visualisasi (Dihapus)</h2>
+                    <!-- Konten Visualisasi dihapus -->
+                </section>
             </div>
 
             <!-- KOLOM KANAN (INPUT - BARIS 1) -->
@@ -252,10 +239,7 @@
                     <!-- KONTROL TABEL FREKUENSI -->
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-base font-semibold text-slate-800">Tabel Frekuensi Observasi</h3>
-                        <div class="flex space-x-2">
-                            <button id="copy-raw-data-btn" class="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition" title="Salin data mentah (long format) ke clipboard">Salin Data Mentah</button>
-                            <button id="toggle-raw-data-btn" class="px-2 py-1 text-xs font-medium text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
-                        </div>
+                        <!-- Hapus tombol Salin dan Data Mentah di sini -->
                     </div>
                     
                     <div id="frequency-table-container"></div>
@@ -267,13 +251,31 @@
                         <div id="raw-data-table-content"></div>
                     </div>
 
+                    <!-- PEMISAH BARU -->
+                    <hr class="my-4">
+
+                    <!-- KONTROL TOMBOL SEMUA DALAM SATU BARIS -->
+                    <div class="flex flex-wrap gap-2 justify-between"> <!-- Gunakan flex-wrap dan justify-between untuk responsif -->
+                        <!-- Tombol Crosstab (Default TERTUTUP/Hijau) -->
+                        <button id="toggle-crosstab-btn" class="flex-grow px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition min-w-0" title="Tampilkan/Sembunyikan Tabel Kontingensi">Tabel Kontingensi</button>
+                        
+                        <!-- Tombol Detailed (Default TERTUTUP/Hijau) -->
+                        <button id="toggle-detailed-btn" class="flex-grow px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition min-w-0" title="Tampilkan/Sembunyikan Hasil Uji Statistik Rinci">Hasil Uji Statistik</button>
+
+                        <!-- Tombol Toggle Raw Data -->
+                        <button id="toggle-raw-data-btn" class="flex-grow px-3 py-1 text-xs font-medium text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition min-w-0" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
+
+                        <!-- Tombol Copy Raw Data -->
+                        <button id="copy-raw-data-btn" class="flex-grow px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition min-w-0" title="Salin data mentah (long format) ke clipboard">Salin Data Mentah</button>
+                    </div>
+
                 </div>
             </aside>
             
             <!-- BARIS BAWAH PENUH (DASBOR ANALISIS - BARIS 4) -->
             <!-- BAGIAN INI DIHAPUS DAN DIINTEGRASIKAN -->
             <div class="lg:col-span-3 space-y-6 order-3 lg:order-3"> 
-                 <!-- Konten di sini sudah dipindahkan atau dihapus -->
+                <!-- Konten di sini sudah dipindahkan atau dihapus -->
             </div>
 
 
@@ -343,8 +345,8 @@
             [7, 6],
             [7, 13]
         ],
-        crosstabOpen: false, // STATUS BARU: false secara default
-        detailedOpen: false // STATUS BARU untuk Detailed Tests
+        crosstabOpen: false, // UBAH DEFAULT KE FALSE
+        detailedOpen: false // UBAH DEFAULT KE FALSE
     };
     
     // --- Fungsi Matematika Lanjutan untuk P-Value (Integrasi) ---
@@ -526,7 +528,7 @@
                     if (R === 2 && C === 2) {
                         const diffCC = Math.abs(diff) - 0.5;
                         if (diffCC > 0) {
-                             ccChiSquare += (diffCC * diffCC) / E[i][j];
+                            ccChiSquare += (diffCC * diffCC) / E[i][j];
                         }
                     }
                 }
@@ -644,8 +646,8 @@
 
     const handleInputChange = (event) => {
         const target = event.target;
-        const changedId = target.id;
-        const cursorPosition = target.selectionStart; // Simpan posisi kursor
+        const changedId = target?.id;
+        const cursorPosition = target?.selectionStart; // Gunakan optional chaining untuk safety
 
         // 1. Baca data dari DOM ke state (sebelum rendering)
         state.varXName = document.getElementById('varX_name').value;
@@ -677,8 +679,9 @@
         renderInputPanel();
 
         // 3. Kembalikan fokus dan posisi kursor hanya jika yang diubah adalah input kategori/kode
-        if (changedId.startsWith('catX_name_') || changedId.startsWith('catY_name_') || 
-            changedId.startsWith('catX_code_') || changedId.startsWith('catY_code_')) {
+        // FIX: Menggunakan optional chaining dan memastikan changedId ada.
+        if (changedId && (changedId.startsWith('catX_name_') || changedId.startsWith('catY_name_') || 
+            changedId.startsWith('catX_code_') || changedId.startsWith('catY_code_'))) {
             const newElement = document.getElementById(changedId);
             if (newElement) {
                 newElement.focus();
@@ -755,16 +758,26 @@
         // Gabungkan dengan newline
         const dataToCopy = rawObservations.join('\n');
 
-        // Salin ke clipboard
+        // Feedback visual
+        const button = document.getElementById('copy-raw-data-btn');
+        const originalText = button.textContent;
+        
+        // Salin ke clipboard (memperbaiki masalah salin dengan menambahkan seleksi)
         const tempTextArea = document.createElement('textarea');
+        // Sembunyikan dan perbaiki posisinya agar tidak mengganggu layout
+        tempTextArea.style.position = 'fixed';
+        tempTextArea.style.opacity = '0'; 
         tempTextArea.value = dataToCopy;
         document.body.appendChild(tempTextArea);
+        
+        // PENTING: Memilih teks agar execCommand('copy') berfungsi
+        tempTextArea.select();
+        tempTextArea.setSelectionRange(0, 99999); // Untuk dukungan seluler/iOS
+        
         document.execCommand('copy');
         document.body.removeChild(tempTextArea);
 
         // Feedback visual
-        const button = document.getElementById('copy-raw-data-btn');
-        const originalText = button.textContent;
         button.textContent = 'Data Tersalin!';
         setTimeout(() => {
             button.textContent = originalText;
@@ -777,9 +790,9 @@
         const rawDataContainer = document.getElementById('raw-data-table-content');
         
         let rawDataHtml = `<table class="raw-data-table w-full"><thead><tr>
-                            <th class="bg-slate-200">${state.varXName}</th>
-                            <th class="bg-slate-200">${state.varYName}</th>
-                         </tr></thead><tbody>`;
+                             <th class="bg-slate-200">${state.varXName}</th>
+                             <th class="bg-slate-200">${state.varYName}</th>
+                           </tr></thead><tbody>`;
 
         const rawObservations = [];
         let totalCount = 0;
@@ -920,6 +933,49 @@
         renderAll();
     };
 
+    // FUNGSI BARU: Logika Toggle untuk Hasil (Crosstab dan Detailed)
+    const toggleResultsVisibility = (sectionId, stateKey) => {
+        const content = document.getElementById(sectionId);
+        const button = document.getElementById(`toggle-${stateKey}-btn`);
+        
+        // Toggle state internal
+        state[`${stateKey}Open`] = !state[`${stateKey}Open`];
+
+        // Apply changes to DOM and button class/text
+        if (state[`${stateKey}Open`]) {
+            content.classList.remove('hidden');
+            // Ganti warna tombol menjadi netral jika TAMPIL
+            button.classList.remove('bg-green-100', 'text-green-700');
+            button.classList.add('bg-slate-200', 'text-slate-700');
+        } else {
+            content.classList.add('hidden');
+            // Ganti warna tombol menjadi hijau jika SEMBUNYI
+            button.classList.remove('bg-slate-200', 'text-slate-700');
+            button.classList.add('bg-green-100', 'text-green-700');
+        }
+    }
+    
+    // FUNGSI BARU: Logika Toggle untuk Raw Data (Sekarang terpisah dari toggleResultsVisibility)
+    const toggleRawDataVisibility = () => {
+        const container = document.getElementById('raw-data-view-container');
+        const button = document.getElementById('toggle-raw-data-btn');
+        
+        const isHidden = container.classList.contains('hidden'); // Check if it IS hidden (meaning we are about to SHOW it)
+
+        if (isHidden) {
+            container.classList.remove('hidden');
+            button.classList.remove('bg-slate-200', 'text-slate-700');
+            button.classList.add('bg-green-600', 'text-white');
+            button.textContent = 'Sembunyikan Data'; // FIX: Update button text
+        } else {
+            container.classList.add('hidden');
+            button.classList.remove('bg-green-600', 'text-white');
+            button.classList.add('bg-slate-200', 'text-slate-700');
+            button.textContent = 'Data Mentah'; // FIX: Update button text
+        }
+    }
+
+
     const setupListeners = () => {
         // Listener yang memicu perubahan dimensi (struktur DOM)
         document.getElementById('num_categories_x').addEventListener('change', handleDimensionChange);
@@ -932,11 +988,8 @@
         // Listener untuk Tombol Copy
         document.getElementById('copy-raw-data-btn').addEventListener('click', copyRawData);
         
-        // Listener untuk Tombol Toggle Raw Data
-        document.getElementById('toggle-raw-data-btn').addEventListener('click', () => {
-            const container = document.getElementById('raw-data-view-container');
-            container.classList.toggle('hidden');
-        });
+        // Listener untuk Tombol Toggle Raw Data (Menggunakan fungsi baru)
+        document.getElementById('toggle-raw-data-btn').addEventListener('click', toggleRawDataVisibility);
         
         // Listener untuk Modal
         document.getElementById('confirm-collapse').addEventListener('click', confirmCollapse);
@@ -954,38 +1007,14 @@
             });
         }
         
-        // Listener untuk Crosstab Accordion
-        document.getElementById('crosstab-header').addEventListener('click', toggleCrosstabVisibility);
+        // Listener untuk Toggle Crosstab (Kini berada di Panel Input)
+        document.getElementById('toggle-crosstab-btn').addEventListener('click', () => toggleResultsVisibility('crosstab-content', 'crosstab'));
         
-        // Listener untuk Detailed Tests Accordion
-        document.getElementById('detailed-header').addEventListener('click', toggleDetailedVisibility);
+        // Listener untuk Toggle Detailed Tests (Kini berada di Panel Input)
+        document.getElementById('toggle-detailed-btn').addEventListener('click', () => toggleResultsVisibility('detailed-content', 'detailed'));
     };
     
-    // FUNGSI BARU: Toggle Crosstab Visibility
-    const toggleCrosstabVisibility = () => {
-        // Toggle state internal
-        state.crosstabOpen = !state.crosstabOpen;
-        
-        // Apply changes to DOM immediately
-        const content = document.getElementById('crosstab-content');
-        const arrow = document.getElementById('crosstab-arrow');
-
-        content.classList.toggle('hidden', !state.crosstabOpen);
-        arrow.classList.toggle('rotated', state.crosstabOpen);
-    }
-    
-    // FUNGSI BARU: Toggle Detailed Tests Visibility
-    const toggleDetailedVisibility = () => {
-        // Toggle state internal
-        state.detailedOpen = !state.detailedOpen;
-        
-        // Apply changes to DOM immediately
-        const content = document.getElementById('detailed-content');
-        const arrow = document.getElementById('detailed-arrow');
-
-        content.classList.toggle('hidden', !state.detailedOpen);
-        arrow.classList.toggle('rotated', state.detailedOpen);
-    }
+    // FUNGSI LAMA TOGGLE AKORDION DIHAPUS
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
@@ -1006,9 +1035,9 @@
 
         // --- 2. Render Header Kategori & Kode ---
         let catHtml = `<div class="flex justify-between items-center mb-1">
-                           <h3 class="text-md font-semibold text-slate-800">Nama Kategori & Kode</h3>
-                           <div id="undo-placeholder-header"></div>
-                       </div>`; // Judul baru
+                             <h3 class="text-md font-semibold text-slate-800">Nama Kategori & Kode</h3>
+                             <div id="undo-placeholder-header"></div>
+                        </div>`; // Judul baru
         
         // Grid kolom header
         // Grid baru dengan 7 kolom: Label Kategori, Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y
@@ -1115,7 +1144,8 @@
                     let targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
                     
                     if (targetCategories.length <= 2) {
-                         alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+                         // Perubahan alert menjadi console.error
+                         console.error("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
                          return;
                     }
                     openCollapseModal(axis, indexToCollapse);
@@ -1200,9 +1230,9 @@
         
         // --- 1. Header dan Konten Naratif ---
         let html = `<div class="interpretation-crosstab">
-                    <h3 class="font-bold text-slate-800 mb-1">Interpretasi</h3> <!-- JUDUL BARU -->
-                    <p class="text-xs text-slate-700">${interpretationContent}</p>
-                 </div>`;
+                     <h3 class="font-bold text-slate-800 mb-1">Interpretasi</h3> <!-- JUDUL BARU -->
+                     <p class="text-xs text-slate-700">${interpretationContent}</p>
+                   </div>`;
 
 
         // --- 2. Peringatan Frekuensi Harapan Rendah (diletakkan di bawah interpretasi naratif) ---
@@ -1230,9 +1260,9 @@
             
             // Perbaikan Asumsi: Mengubah teks di sini
             html += `<div class="warning-low-count text-xs">
-                        <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
-                        <p class="text-yellow-700">${warningText}</p>
-                        ${(state.R > 2 || state.C > 2) ? `<p class="mt-1 text-yellow-700 font-medium">Anda dapat menggunakan fitur Gabungkan Kategori di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
+                         <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
+                         <p class="text-yellow-700">${warningText}</p>
+                         ${(state.R > 2 || state.C > 2) ? `<p class="mt-1 text-yellow-700 font-medium">Anda dapat menggunakan fitur Gabungkan Kategori di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
                     </div>`;
         } else {
              // Perbaikan Asumsi: Mengubah teks di sini
@@ -1246,18 +1276,59 @@
         // Logika inti untuk menampilkan atau menyembunyikan bagian hasil
         const sections = [
             document.getElementById('crosstab-section'), 
-            document.getElementById('detailed-tests-section'), 
-            document.getElementById('interpretation-section-main') // Tambahkan Interpretasi Utama
+            document.getElementById('detailed-tests-section')
         ];
+        
+        // Konten yang bisa di-toggle
+        const crosstabContent = document.getElementById('crosstab-content');
+        const detailedContent = document.getElementById('detailed-content');
+
+        // Tombol toggle (Sekarang ada di Panel Input)
+        const toggleCrosstabBtn = document.getElementById('toggle-crosstab-btn');
+        const toggleDetailedBtn = document.getElementById('toggle-detailed-btn');
 
         if (!stats || stats.N === 0) {
-            // Sembunyikan semua hasil jika N=0
+            // Sembunyikan semua section hasil jika N=0
             sections.forEach(sec => sec.classList.add('hidden'));
+            
+            // Pastikan tombol di Panel Input kembali ke status 'Tampilkan' dan di-highlight hijau
+            if (toggleCrosstabBtn) {
+                // Perhatikan: Karena default state di JS adalah false (hidden), maka di awal akan hijau.
+                // Logika ini hanya berlaku jika N berubah dari >0 menjadi 0.
+                toggleCrosstabBtn.classList.remove('bg-slate-200', 'text-slate-700');
+                toggleCrosstabBtn.classList.add('bg-green-100', 'text-green-700');
+            }
+            if (toggleDetailedBtn) {
+                toggleDetailedBtn.classList.remove('bg-slate-200', 'text-slate-700');
+                toggleDetailedBtn.classList.add('bg-green-100', 'text-green-700');
+            }
+
+            // Pastikan konten hasil tersembunyi
+            crosstabContent.classList.add('hidden');
+            detailedContent.classList.add('hidden');
+
             return;
         }
 
-        // Tampilkan semua hasil jika N > 0
+        // Tampilkan semua section hasil jika N > 0
         sections.forEach(sec => sec.classList.remove('hidden'));
+
+        // Kelola visibility konten berdasarkan state
+        crosstabContent.classList.toggle('hidden', !state.crosstabOpen);
+        detailedContent.classList.toggle('hidden', !state.detailedOpen);
+        
+        // Kelola kelas tombol Crosstab
+        toggleCrosstabBtn.classList.toggle('bg-slate-200', state.crosstabOpen);
+        toggleCrosstabBtn.classList.toggle('text-slate-700', state.crosstabOpen);
+        toggleCrosstabBtn.classList.toggle('bg-green-100', !state.crosstabOpen);
+        toggleCrosstabBtn.classList.toggle('text-green-700', !state.crosstabOpen);
+
+        // Kelola kelas tombol Detailed
+        toggleDetailedBtn.classList.toggle('bg-slate-200', state.detailedOpen);
+        toggleDetailedBtn.classList.toggle('text-slate-700', state.detailedOpen);
+        toggleDetailedBtn.classList.toggle('bg-green-100', !state.detailedOpen);
+        toggleDetailedBtn.classList.toggle('text-green-700', !state.detailedOpen);
+
 
         const chiSquareValue = stats.chiSquare.toFixed(3);
         const p = stats.pValue;
@@ -1299,21 +1370,6 @@
 
         // Terapkan teks
         interpText.innerHTML = mainSentence;
-        
-        // Terapkan status akordion yang disimpan di state
-        const contentCrosstab = document.getElementById('crosstab-content');
-        const arrowCrosstab = document.getElementById('crosstab-arrow');
-        
-        contentCrosstab.classList.toggle('hidden', !state.crosstabOpen);
-        arrowCrosstab.classList.toggle('rotated', state.crosstabOpen);
-        
-        // Terapkan status akordion Detailed Tests
-        const contentDetailed = document.getElementById('detailed-content');
-        const arrowDetailed = document.getElementById('detailed-arrow');
-        
-        contentDetailed.classList.toggle('hidden', !state.detailedOpen);
-        arrowDetailed.classList.toggle('rotated', state.detailedOpen);
-
     };
     
     const renderCrosstab = (stats) => {
@@ -1332,7 +1388,7 @@
         for (let i = 0; i < state.R; i++) {
             const rowTotal = stats.Ri[i];
             bodyHtml += `<tr class="bg-white"><td rowspan="3" class="px-6 py-1 font-medium text-slate-900 align-top">${state.catXNames[i]}</td>
-                         <td class="px-6 py-1 text-slate-500">Observasi</td>`;
+                             <td class="px-6 py-1 text-slate-500">Observasi</td>`;
             for (let j = 0; j < state.C; j++) {
                 bodyHtml += `<td class="px-6 py-1 text-right">${stats.O[i][j]}</td>`;
             }
@@ -1419,27 +1475,14 @@
         // Tentukan apakah ada data (N > 0)
         const hasData = stats.N > 0;
         
-        // Tampilkan atau sembunyikan semua bagian hasil (2, 3, 4)
-        const sections = [
-            document.getElementById('crosstab-section'), 
-            document.getElementById('detailed-tests-section'), 
-            // Interpretasi Utama sekarang ada di dalam detailed-tests-section, tetapi kita juga menggunakannya untuk display: none awal.
-            document.getElementById('interpretation-section-main') 
-        ];
-
-        if (!stats || stats.N === 0) {
-            // Sembunyikan semua hasil jika N=0
-            sections.forEach(sec => sec.classList.add('hidden'));
-            return;
-        }
-
-        // Tampilkan semua hasil jika N > 0
-        sections.forEach(sec => sec.classList.remove('hidden'));
-
+        // Panggil renderResults terlebih dahulu untuk mengatur visibility section dan kelas tombol
         renderResults(stats);
-        renderCrosstab(stats);
-        renderDetailedTable(stats);
-        // renderChart(stats); // Panggilan Chart dihapus
+
+        // Render konten aktual
+        if (hasData) {
+            renderCrosstab(stats);
+            renderDetailedTable(stats);
+        }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
