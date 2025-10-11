@@ -52,6 +52,11 @@
             gap: 0.75rem; /* Kurangi gap */
             align-items: center; 
         }
+        /* MENGHILANGKAN LABEL VARIABEL X/Y. Ganti 1fr 2fr 1.5fr menjadi 0.5fr 2fr 1.5fr */
+        .variable-input-grid.var-input {
+            grid-template-columns: 2fr 1.5fr; /* Hanya Nama dan Jumlah Kategori */
+        }
+
 
         .variable-label { font-weight: 500; font-size: 0.875rem; /* Text lebih kecil */ }
         .input-header-col-2, .input-header-col-3 { font-size: 0.75rem; /* Header lebih kecil */ }
@@ -59,11 +64,14 @@
         /* Layout Nama Kategori (Grid DENSITAS TINGGI: 1 Label + 2 Input + 2 Kode + 1 Gabung) */
         .category-input-grid { 
             display: grid; 
-            grid-template-columns: 0.5fr 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr; /* Label, Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y */
+            /* Grid Lama: 0.5fr 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr */
+            /* Grid Baru (Menghilangkan label pertama): 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr */
+            grid-template-columns: 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr; 
             gap: 0.2rem; /* Kurangi gap */
             align-items: center; 
         }
-        .category-row-label { font-size: 0.75rem; } /* Text paling kecil untuk label baris */
+        /* MENGHILANGKAN LABEL KATEGORI 1/2/DST. */
+        /* .category-row-label { font-size: 0.75rem; } */
 
         .category-header-col-2, .category-header-col-3, .category-header-col-4, .category-header-col-5, .category-header-col-6, .category-header-col-7 { font-size: 0.75rem; text-align: center; } /* Header kategori lebih kecil */
         
@@ -208,15 +216,15 @@
                         </div>
                         
                         <!-- Variabel X Row -->
-                        <div class="variable-input-grid">
-                            <label for="varX_name" class="variable-label self-center">Variabel X</label>
+                        <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
+                            <!-- LABEL DIHAPUS -->
                             <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center text-xs">
                             <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center text-xs">
                         </div>
                         
                         <!-- Variabel Y Row -->
-                        <div class="variable-input-grid">
-                            <label for="varY_name" class="variable-label self-center">Variabel Y</label>
+                        <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
+                            <!-- LABEL DIHAPUS -->
                             <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center text-xs">
                             <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs">
                         </div>
@@ -712,7 +720,7 @@
         });
         freqHtml += `</tr></thead><tbody>`;
         for (let i = 0; i < state.R; i++) {
-            // Label baris (Nama Kategori X)
+            // Label baris (Nama Kategori X) - TIDAK ADA LABEL KATEGORI DI SINI
             freqHtml += `<tr class="border-t border-slate-200"><td class="font-medium text-slate-600 py-2 pr-2">${state.catXNames[i]}</td>`;
             for (let j = 0; j < state.C; j++) {
                 // Input Frekuensi (mempertahankan value lama)
@@ -1046,9 +1054,9 @@
                         </div>`; // Judul baru
         
         // Grid kolom header
-        // Grid baru dengan 7 kolom: Label Kategori, Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y
+        // Grid baru dengan 6 kolom: Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y
         catHtml += `<div class="category-input-grid mb-1">`;
-        catHtml += `<span class="category-row-label"></span>`;
+        // catHtml += `<span class="category-row-label"></span>`; <-- DIHAPUS
         catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
         catHtml += `<span class="category-header-col-3">Kode X</span>`; 
         catHtml += `<span class="category-header-col-4">Gabung X</span>`; 
@@ -1061,8 +1069,8 @@
         // --- 3. Render Baris Input Kategori ---
         for (let i = 0; i < state.R; i++) {
             catHtml += `<div class="category-input-grid">`;
-            // Label Baris (Kategori 1, Kategori 2, dst.)
-            catHtml += `<label class="category-row-label self-center">Kategori ${i+1}</label>`; 
+            // Label Baris (Kategori 1, Kategori 2, dst.) - DIHAPUS
+            // catHtml += `<label class="category-row-label self-center">Kategori ${i+1}</label>`; 
             
             // Input Variabel X (Nama Kategori X)
             catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs"></div>`;
@@ -1111,8 +1119,8 @@
         if (state.C > state.R) {
             for (let j = state.R; j < state.C; j++) {
                 catHtml += `<div class="category-input-grid">`;
-                // Label Baris (Kategori R+1, dst.)
-                catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`; 
+                // Label Baris (Kategori R+1, dst.) - DIHAPUS
+                // catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`; 
                 
                 // Input X Kosong, Kode X Kosong, Gabung X Kosong
                 catHtml += `<div></div>`;
