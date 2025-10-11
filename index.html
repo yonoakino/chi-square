@@ -10,7 +10,7 @@
         - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Cara paling intuitif untuk input data tabular. -> Metode: Vanilla JS.
         - Laporan Info: Frekuensi per kategori. -> Goal: Membandingkan proporsi secara visual. -> Viz/Metode: Grafik Batang Bertumpuk (Stacked Bar Chart). -> Interaksi: Grafik diperbarui secara dinamis, tooltip menampilkan detail. -> Justifikasi: Sangat efektif untuk menunjukkan hubungan bagian-ke-keseluruhan dan membandingkannya antar grup. -> Library: Chart.js (Canvas).
         - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
-        - Laporan Info: P-value. -> Goal: Memberikan interpretasi yang mudah dipahami. -> Viz/Metode: Blok teks dinamis. -> Interaksi: Teks berubah (signifikan/tidak signifikan) berdasarkan ambang batas p-value. -> Justifikasi: Menerjemahkan angka statistik menjadi kesimpulan yang dapat ditindaklanjuti, sangat penting untuk pemahaman pengguna. -> Metode: Vanilla JS.
+        - Laporan Info: P-value. -> Goal: Memberikan interpretasi yang mudah dipahami. -> Viz/Metode: Blok teks dinamis. -> Interaksi: Teks berubah (signifikan/tidak signifikan) berdasarkan ambang batas p-value. -> Justifikasi: Menerjemahkan angka statistik menjadi kesimpulan yang dapat ditindaklanjutkan, sangat penting untuk pemahaman pengguna. -> Metode: Vanilla JS.
         - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS), memberikan kredibilitas dan detail yang diperlukan oleh para ahli. -> Metode: Vanilla JS.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
@@ -61,13 +61,13 @@
         /* Layout Nama Kategori (Grid DENSITAS TINGGI: 1 Label + 2 Input + 2 Kode + 1 Gabung) */
         .category-input-grid { 
             display: grid; 
-            grid-template-columns: 0.5fr 1fr 0.5fr 1fr 0.5fr 1fr; /* Label, Nama X, Kode X, Nama Y, Kode Y, Gabung */
+            grid-template-columns: 0.5fr 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr; /* Label, Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y */
             gap: 0.2rem; /* Kurangi gap */
             align-items: center; 
         }
         .category-row-label { font-size: 0.75rem; } /* Text paling kecil untuk label baris */
 
-        .category-header-col-2, .category-header-col-3, .category-header-col-4, .category-header-col-5, .category-header-col-6 { font-size: 0.75rem; text-align: center; } /* Header kategori lebih kecil */
+        .category-header-col-2, .category-header-col-3, .category-header-col-4, .category-header-col-5, .category-header-col-6, .category-header-col-7 { font-size: 0.75rem; text-align: center; } /* Header kategori lebih kecil */
         
         .collapse-button { font-size: 0.7rem; padding: 0.15rem 0.3rem; } /* Tombol Collapse lebih kecil */
         
@@ -115,14 +115,14 @@
 
 <body class="text-slate-800">
 
-    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-0"> <!-- Ganti p-4 sm:p-6 lg:p-8 menjadi py-4 px-0 -->
 
-        <header class="text-center mb-6"> <!-- Kurangi margin bawah -->
+        <header class="text-center mb-6 px-4"> <!-- Tambahkan px-4 untuk header -->
             <h1 class="4xl font-extrabold text-slate-900 tracking-tight">Dasbor Analisis Chi-Square Interaktif</h1>
             <p class="mt-1 text-base text-slate-600">Analisis hubungan antara variabel kategoris secara real-time.</p>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6"> <!-- Kurangi gap -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> <!-- Tambahkan px-4 untuk main content -->
 
             <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
             <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> <!-- Kurangi space-y -->
@@ -196,6 +196,9 @@
                     
                     <hr class="my-4"> <!-- Kurangi margin -->
                     
+                    <!-- Kontainer Statis untuk Tombol UNDO -->
+                    <div id="undo-container" class="mb-3 flex justify-end"></div> 
+                    
                     <div id="category-names-container" class="space-y-1"></div> <!-- Pindah semua input kategori dan kode di sini -->
                     
                     <!-- KOTAK PENGKODEAN DIHAPUS -->
@@ -229,20 +232,9 @@
                      <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Dasbor Analisis & Visualisasi</h2>
                      
                      <section id="results-dashboard" class="card p-4"> <!-- Kurangi padding -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4"> <!-- Kurangi gap dan margin -->
-                            <div class="card p-3 text-center"> <!-- Kurangi padding -->
-                                <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai Chi-Square (χ²)</h3>
-                                <p id="metric-chi-square" class="metric-value text-3xl font-bold mt-1">1.283</p>
-                            </div>
-                            <div class="card p-3 text-center">
-                                <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">P-Value</h3>
-                                <p id="metric-p-value" class="metric-value text-3xl font-bold mt-1">0.257</p>
-                            </div>
-                            <div class="card p-3 text-center">
-                                <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">Derajat Kebebasan (df)</h3>
-                                <p id="metric-df" class="metric-value text-3xl font-bold mt-1">1</p>
-                            </div>
-                        </div>
+                        
+                        <!-- KOTAK METRIK DIHILANGKAN -->
+                        <!-- Div yang berisi tiga kartu metrik di sini telah dihapus -->
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"> <!-- Kurangi gap -->
                             <div class="p-2"> <!-- Kurangi padding -->
@@ -922,29 +914,55 @@
         document.getElementById('cancel-collapse').addEventListener('click', () => {
             document.getElementById('collapse-modal').style.display = 'none';
         });
+
+        // Listener untuk Tombol Undo Global
+        const undoContainer = document.getElementById('undo-container'); // Retrieve the container
+        if (undoContainer) { // Check if it exists before adding listener
+            undoContainer.addEventListener('click', (e) => {
+                if(e.target.id === 'undo-global-btn') {
+                    undoLastCollapse();
+                }
+            });
+        }
     };
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
-        
-        // Render input nama kategori
-        let catHtml = `<h3 class="text-md font-semibold text-slate-800 mb-1">Nama Kategori & Kode</h3>`; // Judul baru
-        
-        // Header Nama Kategori
-        // Grid baru dengan 6 kolom: Label Kategori, Nama X, Kode X, Nama Y, Kode Y, Gabungkan
-        catHtml += `<div class="category-input-grid mb-1">`;
-        catHtml += `<span class="category-row-label"></span>`;
-        catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
-        catHtml += `<span class="category-header-col-3">Kode X</span>`; // Header Kode X
-        catHtml += `<span class="category-header-col-4">${state.varYName}</span>`;
-        catHtml += `<span class="category-header-col-5">Kode Y</span>`; // Header Kode Y
-        catHtml += `<span class="category-header-col-6" id="collapse-header">Gabungkan</span>`; // Tambahkan ID untuk header Gabungkan
-        catHtml += `</div>`;
+        const undoContainer = document.getElementById('undo-container');
         
         // Cek apakah ada riwayat undo
         const hasHistory = stateHistory.length > 0;
+
+        // --- 1. Render Tombol UNDO Global di Lokasi yang diminta ---
+        // Posisikan tombol UNDO di container statis undo-container
+        if (undoContainer) {
+            if (hasHistory) {
+                undoContainer.innerHTML = `<button type="button" id="undo-global-btn" class="px-3 py-1 text-xs font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600 transition shadow-md" title="Batalkan penggabungan terakhir">UNDO</button>`;
+            } else {
+                undoContainer.innerHTML = '';
+            }
+        }
+
+        // --- 2. Render Header Kategori & Kode ---
+        let catHtml = `<div class="flex justify-between items-center mb-1">
+                           <h3 class="text-md font-semibold text-slate-800">Nama Kategori & Kode</h3>
+                           <div id="undo-placeholder-header"></div>
+                       </div>`; // Judul baru
         
-        // Baris Input Kategori
+        // Grid kolom header
+        // Grid baru dengan 7 kolom: Label Kategori, Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y
+        catHtml += `<div class="category-input-grid mb-1">`;
+        catHtml += `<span class="category-row-label"></span>`;
+        catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
+        catHtml += `<span class="category-header-col-3">Kode X</span>`; 
+        catHtml += `<span class="category-header-col-4">Gabung X</span>`; 
+        catHtml += `<span class="category-header-col-5">${state.varYName}</span>`;
+        catHtml += `<span class="category-header-col-6">Kode Y</span>`; 
+        catHtml += `<span class="category-header-col-7">Gabung Y</span>`; 
+        catHtml += `</div>`;
+        
+        
+        // --- 3. Render Baris Input Kategori ---
         for (let i = 0; i < state.R; i++) {
             catHtml += `<div class="category-input-grid">`;
             // Label Baris (Kategori 1, Kategori 2, dst.)
@@ -956,38 +974,37 @@
             // Input Kode X
             catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs"></div>`;
             
-            // Input Variabel Y (Nama Kategori Y)
+            // Tombol Gabung X (Kolom 4)
+            catHtml += `<div class="flex items-center justify-center">`;
+            if (state.R > 2) {
+                catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
+            } else {
+                catHtml += `<span>-</span>`;
+            }
+            catHtml += `</div>`;
+
+
+            // Input Variabel Y (Nama Kategori Y) (Kolom 5)
             if (i < state.C) {
                 catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center text-xs"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
 
-            // Input Kode Y
+            // Input Kode Y (Kolom 6)
             if (i < state.C) {
                 catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
 
-
-            // Kolom Gabungkan (Baris) - Sekarang Gabung X dan Gabung Y ada di sini
-            catHtml += `<div class="flex items-center space-x-1 collapse-btn-group">`;
-            
-            // Tombol Gabung X
-            if (state.R > 2) {
-                catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
-            } 
-            
-            // Tombol Gabung Y (Hanya jika ada kategori Y di baris ini)
+            // Tombol Gabung Y (Kolom 7)
+            catHtml += `<div class="flex items-center justify-center">`;
             if (state.C > 2 && i < state.C) { 
                 catHtml += `<button type="button" data-axis="C" data-index="${i}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
+            } else {
+                catHtml += `<span>-</span>`;
             }
-            
-            if (state.R <= 2 && (state.C <= 2 || i >= state.C)) {
-                 catHtml += `<span>-</span>`;
-            }
-
             catHtml += `</div>`;
 
 
@@ -1001,9 +1018,10 @@
                 // Label Baris (Kategori R+1, dst.)
                 catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`; 
                 
-                // Input X Kosong dan Kode X Kosong
+                // Input X Kosong, Kode X Kosong, Gabung X Kosong
                 catHtml += `<div></div>`;
                 catHtml += `<div></div>`;
+                catHtml += `<div></div>`; // Kolom Gabung X
                 
                 // Input Variabel Y (Nama Kategori Y)
                 catHtml += `<div><input type="text" id="catY_name_${j}" value="${state.catYNames[j]}" class="label-input-style text-center text-xs"></div>`;
@@ -1011,8 +1029,8 @@
                 // Input Kode Y
                 catHtml += `<div><input type="text" id="catY_code_${j}" value="${state.catYCodes[j]}" class="input-style text-center text-xs"></div>`;
 
-                // Kolom Gabungkan (Baris)
-                catHtml += `<div class="flex items-center space-x-1 collapse-btn-group">`;
+                // Kolom Gabungkan Y (Kolom 7)
+                catHtml += `<div class="flex items-center justify-center">`;
                 if (state.C > 2) {
                      // Tombol gabung Y untuk kategori yang tersisa
                      catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
@@ -1027,36 +1045,20 @@
         
         catContainer.innerHTML = catHtml;
         
-        // --- LOGIKA TOMBOL UNDO GLOBAL (SETELAH KATEGORI DIRENDER) ---
-        const collapseHeader = document.getElementById('collapse-header');
-        
-        if (hasHistory) {
-            // Tampilkan tombol UNDO di header kolom 'Gabungkan'
-            collapseHeader.innerHTML = `<button type="button" id="undo-global-btn" class="collapse-button bg-slate-300 text-slate-800 hover:bg-slate-400 font-bold w-full" title="Batalkan penggabungan terakhir">Undo</button>`;
-            document.getElementById('undo-global-btn').addEventListener('click', undoLastCollapse);
-        } else {
-            collapseHeader.textContent = 'Gabungkan';
-        }
-        // --- AKHIR LOGIKA UNDO GLOBAL ---
-        
-        
         // Pasang listener untuk Gabungkan Kategori (menggunakan Modal)
         document.querySelectorAll('.collapse-button').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // Abaikan tombol UNDO yang diurus secara terpisah di atas
-                if (e.target.id === 'undo-global-btn') return;
-                
                 const axis = e.target.getAttribute('data-axis');
-                const indexToCollapse = parseInt(e.target.getAttribute('data-index'));
-
-                let targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
-                
-                if (targetCategories.length <= 2) {
-                     alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
-                     return;
-                }
-                
-                openCollapseModal(axis, indexToCollapse);
+                if (axis) {
+                    const indexToCollapse = parseInt(e.target.getAttribute('data-index'));
+                    let targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
+                    
+                    if (targetCategories.length <= 2) {
+                         alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+                         return;
+                    }
+                    openCollapseModal(axis, indexToCollapse);
+                } 
             });
         });
 
@@ -1124,18 +1126,18 @@
             sections.forEach(sec => sec.classList.add('hidden'));
 
             // Reset metrik
-            document.getElementById('metric-chi-square').textContent = '-';
-            document.getElementById('metric-p-value').textContent = '-';
-            document.getElementById('metric-df').textContent = '-';
+            // document.getElementById('metric-chi-square').textContent = '-'; // Dihapus dari UI
+            // document.getElementById('metric-p-value').textContent = '-'; // Dihapus dari UI
+            // document.getElementById('metric-df').textContent = '-'; // Dihapus dari UI
             return;
         }
 
         // Tampilkan semua hasil jika N > 0
         sections.forEach(sec => sec.classList.remove('hidden'));
 
-        document.getElementById('metric-chi-square').textContent = stats.chiSquare.toFixed(3);
-        document.getElementById('metric-p-value').textContent = formatPValue(stats.pValue);
-        document.getElementById('metric-df').textContent = stats.df;
+        // document.getElementById('metric-chi-square').textContent = stats.chiSquare.toFixed(3); // Dihapus dari UI
+        // document.getElementById('metric-p-value').textContent = formatPValue(stats.pValue); // Dihapus dari UI
+        // document.getElementById('metric-df').textContent = stats.df; // Dihapus dari UI
 
         const p = stats.pValue;
         const interpText = document.getElementById('interpretation-text');
