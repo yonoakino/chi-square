@@ -203,11 +203,11 @@
 
             <!-- KOLOM KANAN (INPUT - BARIS 1) -->
             <aside class="lg:col-span-1 order-1 lg:order-1">
-                <div class="card p-4 sticky top-8"> <!-- Kurangi padding card -->
+                <div class="card p-3 sticky top-8"> <!-- MENGURANGI PADDING CARD: p-4 -> p-3 -->
                     <h2 class="text-xl font-bold text-slate-900 mb-1">1. Panel Input Data</h2>
-                    <p class="text-xs text-slate-500 mb-4">Ubah nilai frekuensi atau nama kategori di bawah ini untuk melihat semua hasil diperbarui secara otomatis.</p> <!-- Text lebih kecil -->
+                    <p class="text-xs text-slate-500 mb-3">Ubah nilai frekuensi atau nama kategori di bawah ini untuk melihat semua hasil diperbarui secara otomatis.</p> <!-- MENGURANGI MARGIN BOTTOM: mb-4 -> mb-3 -->
                     
-                    <div class="space-y-3"> <!-- Kurangi space-y -->
+                    <div class="space-y-2"> <!-- MENGURANGI SPACE VERTICAL: space-y-3 -> space-y-2 -->
                         <!-- Header Input Variabel -->
                         <div class="variable-input-grid">
                             <span class="variable-label"></span>
@@ -233,19 +233,19 @@
                         <!-- <div id="undo-button-container" class="pt-4"> ... </div> -->
                     </div>
                     
-                    <hr class="my-4"> <!-- Kurangi margin -->
+                    <hr class="my-3"> <!-- MENGURANGI MARGIN GARIS HORIZONTAL: my-4 -> my-3 -->
                     
                     <!-- Kontainer Statis untuk Tombol UNDO -->
-                    <div id="undo-container" class="mb-3 flex justify-end"></div> 
+                    <div id="undo-container" class="mb-2 flex justify-end"></div> <!-- MENGURANGI MARGIN BOTTOM: mb-3 -> mb-2 -->
                     
-                    <div id="category-names-container" class="space-y-1"></div> <!-- Pindah semua input kategori dan kode di sini -->
+                    <div id="category-names-container" class="space-y-0.5"></div> <!-- MENGURANGI SPACE VERTICAL: space-y-1 -> space-y-0.5 -->
                     
                     <!-- KOTAK PENGKODEAN DIHAPUS -->
                     
-                    <hr class="my-4"> <!-- Kurangi margin -->
+                    <hr class="my-3"> <!-- MENGURANGI MARGIN GARIS HORIZONTAL: my-4 -> my-3 -->
 
                     <!-- KONTROL TABEL FREKUENSI -->
-                    <div class="flex justify-between items-center mb-2">
+                    <div class="flex justify-between items-center mb-1"> <!-- MENGURANGI MARGIN BOTTOM: mb-2 -> mb-1 -->
                         <h3 class="text-base font-semibold text-slate-800">Tabel Frekuensi Observasi</h3>
                         <!-- Hapus tombol Salin dan Data Mentah di sini -->
                     </div>
@@ -253,9 +253,9 @@
                     <div id="frequency-table-container"></div>
                     
                     <!-- KOTAK BARU UNTUK DATA MENTAH -->
-                    <div id="raw-data-view-container" class="card p-2 overflow-x-auto max-h-64 hidden mt-4"> <!-- Tambahkan 'hidden' dan margin top -->
+                    <div id="raw-data-view-container" class="card p-2 overflow-x-auto max-h-48 hidden mt-3"> <!-- MENGURANGI MAX HEIGHT dan MARGIN TOP -->
                         <h4 class="text-sm font-semibold text-slate-800 mb-1">Tabel Data Mentah (Kode Numerik)</h4>
-                        <p class="text-xs text-slate-500 mb-2">Kolom menunjukkan Kode X dan Kode Y yang diacak.</p>
+                        <p class="text-xs text-slate-500 mb-1">Kolom menunjukkan Kode X dan Kode Y yang diacak.</p> <!-- MENGURANGI MARGIN BOTTOM -->
                         <div id="raw-data-table-content"></div>
                     </div>
 
