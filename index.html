@@ -42,6 +42,9 @@
         .category-header-col-2 { grid-column: 2 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
         .category-header-col-3 { grid-column: 3 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
         .category-row-label { text-align: left; font-weight: 500; }
+        
+        .warning-low-count { background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; margin-top: 1rem; border-radius: 0.375rem; }
+        .interpretation-crosstab { padding: 1rem; margin-top: 1rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; background-color: #f9fafb; }
     </style>
 </head>
 
@@ -69,6 +72,8 @@
                             </table>
                         </div>
                      </div>
+                     <!-- Kontainer Interpretasi Crosstabulation -->
+                     <div id="crosstab-interpretation-container"></div>
                  </section>
                 
                  <section id="detailed-tests-section">
@@ -333,10 +338,30 @@
         
         const E = Array(R).fill(0).map(() => Array(C).fill(0));
         let chiSquare = 0, ccChiSquare = 0;
+        let lowExpectedCount = 0; // Tambahkan penghitung Low Expected Count
+        let minExpectedCount = Infinity;
+        let maxObserved = -Infinity;
+        let maxObservedLoc = {i: -1, j: -1};
 
         for (let i = 0; i < R; i++) {
             for (let j = 0; j < C; j++) {
                 E[i][j] = (Ri[i] * Cj[j]) / N;
+                
+                // Cek Frekuensi Harapan Rendah
+                if (E[i][j] < 5) {
+                    lowExpectedCount++;
+                }
+                if (E[i][j] < minExpectedCount) {
+                    minExpectedCount = E[i][j];
+                }
+                
+                // Cek Frekuensi Observasi Tertinggi
+                if (O[i][j] > maxObserved) {
+                    maxObserved = O[i][j];
+                    maxObservedLoc = {i: i, j: j};
+                }
+
+
                 if (E[i][j] > 0) {
                     const diff = O[i][j] - E[i][j];
                     chiSquare += (diff * diff) / E[i][j];
@@ -357,12 +382,21 @@
         
         const fisherP = (R === 2 && C === 2) ? fisherExactTest(O[0][0], O[0][1], O[1][0], O[1][1]) : { twoSided: NaN };
 
-        return { N, O, E, Ri, Cj, chiSquare, ccChiSquare, df, pValue, ccPValue, fisherP };
+        // Tambahkan statistik untuk interpretasi crosstab
+        const totalCells = R * C;
+        const percentLowExpected = (lowExpectedCount / totalCells) * 100;
+        const maxObservedPercent = (maxObserved / N) * 100;
+        
+        return { N, O, E, Ri, Cj, chiSquare, ccChiSquare, df, pValue, ccPValue, fisherP, 
+                 lowExpectedCount, totalCells, percentLowExpected, minExpectedCount, 
+                 maxObserved, maxObservedLoc, maxObservedPercent };
     };
 
     const formatPValue = (p) => {
         if (isNaN(p)) return '-';
-        return p < 0.001 ? '.000' : p.toFixed(3).replace(/^0\./, '.');
+        // PERBAIKAN: Selalu tampilkan '0' di depan titik desimal (kecuali untuk p < 0.001)
+        if (p < 0.001) return '0.000'; 
+        return p.toFixed(3).replace(/^0\./, '0.'); // Mengganti .257 menjadi 0.257
     };
 
     const handleDimensionChange = () => {
@@ -572,7 +606,47 @@
         document.querySelectorAll('#category-names-container input').forEach(el => el.addEventListener('input', handleInputChange));
     };
     
-    // ... (Fungsi renderCrosstab, renderDetailedTable, renderChart, renderAll tetap sama)
+    // FUNGSI BARU: Render Interpretasi Crosstab
+    const renderCrosstabInterpretation = (stats) => {
+        const container = document.getElementById('crosstab-interpretation-container');
+        if (!stats || stats.N === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        
+        // --- 1. Interpretasi Observasi Tertinggi ---
+        const maxObservedText = `Terdapat ${stats.N} kasus valid. Frekuensi observasi tertinggi adalah **${stats.maxObserved}** (${stats.maxObservedPercent.toFixed(1)}% dari total) yang terletak pada kombinasi ${state.varXName}: **${state.catXNames[stats.maxObservedLoc.i]}** dan ${state.varYName}: **${state.catYNames[stats.maxObservedLoc.j]}**.`;
+
+        html += `<div class="interpretation-crosstab">
+                    <h3 class="font-bold text-slate-800 mb-2">Interpretasi Frekuensi Observasi</h3>
+                    <p class="text-sm text-slate-700">${maxObservedText}</p>
+                 </div>`;
+        
+        // --- 2. Peringatan Frekuensi Harapan Rendah ---
+        if (stats.percentLowExpected > 0) {
+            let warningText = `Peringatan: ${stats.lowExpectedCount} sel (${stats.percentLowExpected.toFixed(1)}%) memiliki frekuensi harapan (Expected Count) kurang dari 5.`;
+
+            if (stats.percentLowExpected > 20) {
+                warningText += ` Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin **tidak valid** untuk tabel $R \\times C$ ini.`;
+                if (stats.R === 2 && stats.C === 2) {
+                    warningText += ` Untuk tabel $2 \\times 2$, Anda harus mengacu pada **Fisher's Exact Test** atau **Continuity Correction**.`;
+                }
+            } else if (stats.percentLowExpected > 0) {
+                 warningText += ` Pastikan setiap sel memiliki nilai harapan (Expected Count) minimal ${stats.minExpectedCount.toFixed(2)}.`;
+            }
+            
+            html += `<div class="warning-low-count text-sm">
+                        <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
+                        <p class="text-yellow-700">${warningText}</p>
+                    </div>`;
+        } else {
+             html += `<p class="mt-4 text-sm text-green-700 font-medium">Asumsi frekuensi harapan terpenuhi (semua sel memiliki Expected Count $\\geq 5$). Uji Chi-Square Pearson valid.</p>`;
+        }
+
+        container.innerHTML = html;
+    };
     
     const renderResults = (stats) => {
         if (!stats || stats.N === 0) {
@@ -604,7 +678,7 @@
             interpText.parentElement.classList.add('bg-red-50', 'border-red-500');
             interpText.innerHTML = `<span class="font-bold">Hasil Signifikan:</span> Dengan tingkat signifikansi 0.05, terdapat bukti yang cukup untuk menyatakan adanya hubungan statistik yang signifikan antara ${state.varXName} dan ${state.varYName} (${pValueText}).`;
         } else {
-            interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-slate-100', 'border-slate-400');
+            interpText.parentElement.classList.remove('bg-red-50', 'border-red-500', 'bg-green-50', 'border-green-500');
             interpText.parentElement.classList.add('bg-green-50', 'border-green-500');
             interpText.innerHTML = `<span class="font-bold">Hasil Tidak Signifikan:</span> Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara ${state.varXName} dan ${state.varYName} (${pValueText}).`;
         }
@@ -651,6 +725,9 @@
         });
         bodyHtml += `<td class="px-6 py-2 text-right">${stats.N}</td></tr>`;
         body.innerHTML = bodyHtml;
+        
+        // Render interpretasi
+        renderCrosstabInterpretation(stats);
     };
 
     const renderDetailedTable = (stats) => {
