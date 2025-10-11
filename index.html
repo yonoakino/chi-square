@@ -127,7 +127,7 @@
             <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
             <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> <!-- Kurangi space-y -->
                 
-                 <section id="crosstab-section">
+                 <section id="crosstab-section" class="hidden"> <!-- Tambahkan 'hidden' -->
                      <h2 class="text-2xl font-bold text-slate-900 mb-2">2. Tabel Kontingensi (Crosstabulation)</h2>
                      <div class="card overflow-hidden">
                         <div class="overflow-x-auto">
@@ -141,7 +141,7 @@
                      <div id="crosstab-interpretation-container"></div>
                  </section>
                 
-                 <section id="detailed-tests-section">
+                 <section id="detailed-tests-section" class="hidden"> <!-- Tambahkan 'hidden' -->
                      <h2 class="text-2xl font-bold text-slate-900 mb-2">3. Hasil Uji Statistik Rinci</h2>
                      <div class="card overflow-hidden">
                          <div class="overflow-x-auto">
@@ -223,40 +223,42 @@
             
             <!-- BARIS BAWAH PENUH (DASBOR ANALISIS - BARIS 4) -->
             <div class="lg:col-span-3 space-y-6 order-3 lg:order-3"> <!-- Kurangi space-y -->
-                 <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Dasbor Analisis & Visualisasi</h2>
-                 
-                 <section id="results-dashboard" class="card p-4"> <!-- Kurangi padding -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4"> <!-- Kurangi gap dan margin -->
-                        <div class="card p-3 text-center"> <!-- Kurangi padding -->
-                            <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai Chi-Square (χ²)</h3>
-                            <p id="metric-chi-square" class="metric-value text-3xl font-bold mt-1">1.283</p>
-                        </div>
-                        <div class="card p-3 text-center">
-                            <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">P-Value</h3>
-                            <p id="metric-p-value" class="metric-value text-3xl font-bold mt-1">0.257</p>
-                        </div>
-                        <div class="card p-3 text-center">
-                            <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">Derajat Kebebasan (df)</h3>
-                            <p id="metric-df" class="metric-value text-3xl font-bold mt-1">1</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"> <!-- Kurangi gap -->
-                        <div class="p-2"> <!-- Kurangi padding -->
-                            <h3 class="text-base font-semibold text-slate-900 mb-1">Visualisasi Proporsi</h3>
-                            <p class="text-xs text-slate-500 mb-2">Grafik ini menunjukkan perbandingan distribusi 'Variabel Y' di setiap kategori 'Variabel X'.</p>
-                            <div class="chart-container">
-                                <canvas id="chiSquareChart"></canvas>
+                 <section id="analysis-dashboard-section" class="hidden"> <!-- Tambahkan 'hidden' -->
+                     <h2 class="text-2xl font-bold text-slate-900 mb-2 mt-4">4. Dasbor Analisis & Visualisasi</h2>
+                     
+                     <section id="results-dashboard" class="card p-4"> <!-- Kurangi padding -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4"> <!-- Kurangi gap dan margin -->
+                            <div class="card p-3 text-center"> <!-- Kurangi padding -->
+                                <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai Chi-Square (χ²)</h3>
+                                <p id="metric-chi-square" class="metric-value text-3xl font-bold mt-1">1.283</p>
+                            </div>
+                            <div class="card p-3 text-center">
+                                <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">P-Value</h3>
+                                <p id="metric-p-value" class="metric-value text-3xl font-bold mt-1">0.257</p>
+                            </div>
+                            <div class="card p-3 text-center">
+                                <h3 class="text-xs font-medium text-slate-500 uppercase tracking-wider">Derajat Kebebasan (df)</h3>
+                                <p id="metric-df" class="metric-value text-3xl font-bold mt-1">1</p>
                             </div>
                         </div>
 
-                        <section id="interpretation-section" class="p-3 interpretation-box flex flex-col justify-center"> <!-- Kurangi padding -->
-                            <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Utama</h3>
-                            <p class="text-xs text-green-700 mb-2">Bagian ini menerjemahkan hasil statistik menjadi kesimpulan yang mudah dipahami berdasarkan ambang batas $p < 0.05$.</p>
-                            <p id="interpretation-text" class="text-xs text-green-700 font-medium">Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara Variabel X dan Variabel Y (p = 0.257).</p>
-                        </section>
-                    </div>
-                </section>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"> <!-- Kurangi gap -->
+                            <div class="p-2"> <!-- Kurangi padding -->
+                                <h3 class="text-base font-semibold text-slate-900 mb-1">Visualisasi Proporsi</h3>
+                                <p class="text-xs text-slate-500 mb-2">Grafik ini menunjukkan perbandingan distribusi 'Variabel Y' di setiap kategori 'Variabel X'.</p>
+                                <div class="chart-container">
+                                    <canvas id="chiSquareChart"></canvas>
+                                </div>
+                            </div>
+
+                            <section id="interpretation-section" class="p-3 interpretation-box flex flex-col justify-center"> <!-- Kurangi padding -->
+                                <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Utama</h3>
+                                <p class="text-xs text-green-700 mb-2">Bagian ini menerjemahkan hasil statistik menjadi kesimpulan yang mudah dipahami berdasarkan ambang batas $p < 0.05$.</p>
+                                <p id="interpretation-text" class="text-xs text-green-700 font-medium">Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara Variabel X dan Variabel Y (p = 0.257).</p>
+                            </section>
+                        </div>
+                     </section>
+                 </section>
             </div>
 
 
@@ -1138,12 +1140,26 @@
     };
     
     const renderResults = (stats) => {
+        // Logika inti untuk menampilkan atau menyembunyikan bagian hasil
+        const sections = [
+            document.getElementById('crosstab-section'), 
+            document.getElementById('detailed-tests-section'), 
+            document.getElementById('analysis-dashboard-section')
+        ];
+
         if (!stats || stats.N === 0) {
+            // Sembunyikan semua hasil jika N=0
+            sections.forEach(sec => sec.classList.add('hidden'));
+
+            // Reset metrik
             document.getElementById('metric-chi-square').textContent = '-';
             document.getElementById('metric-p-value').textContent = '-';
             document.getElementById('metric-df').textContent = '-';
             return;
         }
+
+        // Tampilkan semua hasil jika N > 0
+        sections.forEach(sec => sec.classList.remove('hidden'));
 
         document.getElementById('metric-chi-square').textContent = stats.chiSquare.toFixed(3);
         document.getElementById('metric-p-value').textContent = formatPValue(stats.pValue);
@@ -1321,6 +1337,25 @@
     const renderAll = () => {
         
         const stats = calculateStatistics();
+        
+        // Tentukan apakah ada data (N > 0)
+        const hasData = stats.N > 0;
+        
+        // Tampilkan atau sembunyikan semua bagian hasil (2, 3, 4)
+        const sections = [
+            document.getElementById('crosstab-section'), 
+            document.getElementById('detailed-tests-section'), 
+            document.getElementById('analysis-dashboard-section')
+        ];
+        
+        sections.forEach(sec => {
+            if (hasData) {
+                sec.classList.remove('hidden');
+            } else {
+                sec.classList.add('hidden');
+            }
+        });
+
         renderResults(stats);
         renderCrosstab(stats);
         renderDetailedTable(stats);
