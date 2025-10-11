@@ -108,6 +108,33 @@
             padding: 0.2rem 0.4rem;
         }
         
+        /* Accordion Style */
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: #f3f4f6; /* slate-100 */
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .accordion-header:hover {
+            background-color: #e5e7eb; /* slate-200 */
+        }
+        .accordion-content {
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+        }
+        .arrow-icon {
+            transition: transform 0.3s;
+        }
+        .rotated {
+            transform: rotate(90deg);
+        }
+        
     </style>
 </head>
 
@@ -125,43 +152,51 @@
             <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
             <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> <!-- Kurangi space-y -->
                 
-                 <section id="crosstab-section" class="hidden"> <!-- Tambahkan 'hidden' -->
-                     <h2 class="text-2xl font-bold text-slate-900 mb-2">2. Tabel Kontingensi (Crosstabulation)</h2>
-                     <div class="card overflow-hidden">
-                        <div class="overflow-x-auto">
+                 <section id="crosstab-section" class="hidden card p-0"> <!-- Ubah menjadi card tanpa padding -->
+                     <div id="crosstab-header" class="accordion-header"> <!-- Hapus onclick -->
+                         <h2 class="text-xl font-bold text-slate-900">2. Tabel Kontingensi (Crosstabulation)</h2>
+                         <svg id="crosstab-arrow" class="w-5 h-5 text-slate-600 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                     </div>
+                     <div id="crosstab-content" class="accordion-content hidden">
+                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead id="crosstab-head"></thead>
                                 <tbody id="crosstab-body" class="divide-y divide-slate-200"></tbody>
                             </table>
-                        </div>
+                         </div>
+                         <!-- Kontainer Interpretasi Crosstabulation -->
+                         <div id="crosstab-interpretation-container"></div>
                      </div>
-                     <!-- Kontainer Interpretasi Crosstabulation -->
-                     <div id="crosstab-interpretation-container"></div>
                  </section>
                 
-                 <section id="detailed-tests-section" class="hidden"> <!-- Tambahkan 'hidden' -->
-                     <h2 class="text-2xl font-bold text-slate-900 mb-2">3. Hasil Uji Statistik Rinci</h2>
-                     <div class="card overflow-hidden">
-                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-slate-50">
-                                    <tr>
-                                        <th class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Uji Statistik</th>
-                                        <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai</th>
-                                        <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">df</th>
-                                        <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Asymp. Sig. (2-sided)</th>
-                                        <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Exact Sig. (2-sided)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailed-tests-body" class="bg-white divide-y divide-slate-200"></tbody>
-                            </table>
-                         </div>
+                 <section id="detailed-tests-section" class="hidden card p-0"> <!-- Tambahkan 'hidden' dan ubah jadi card p-0 -->
+                     <div id="detailed-header" class="accordion-header">
+                         <h2 class="text-xl font-bold text-slate-900">3. Hasil Uji Statistik Rinci</h2>
+                         <svg id="detailed-arrow" class="w-5 h-5 text-slate-600 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                      </div>
-                     <!-- KOTAK INTERPRETASI UTAMA DIPINDAH KE SINI -->
-                     <section id="interpretation-section-main" class="mt-4 p-3 interpretation-box">
-                        <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Uji Statistik</h3>
-                        <p id="interpretation-text" class="text-xs text-green-700 font-medium">Interpretasi akan muncul di sini setelah Anda memasukkan data.</p>
-                     </section>
+                     <div id="detailed-content" class="accordion-content hidden">
+                         <div class="card overflow-hidden">
+                             <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Uji Statistik</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">df</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Asymp. Sig. (2-sided)</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Exact Sig. (2-sided)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailed-tests-body" class="bg-white divide-y divide-slate-200"></tbody>
+                                </table>
+                             </div>
+                         </div>
+                         <!-- KOTAK INTERPRETASI UTAMA DIPINDAH KE SINI -->
+                         <section id="interpretation-section-main" class="mt-4 p-3 interpretation-box">
+                            <h3 class="text-base font-semibold text-green-800 mb-1">Interpretasi Hasil Uji Statistik</h3>
+                            <p id="interpretation-text" class="text-xs text-green-700 font-medium">Interpretasi akan muncul di sini setelah Anda memasukkan data.</p>
+                         </section>
+                     </div>
                  </section>
                 
                  <!-- BAGIAN 4 DIHAPUS (HANYA DIBIARKAN KONTEN KOSONG) -->
@@ -307,7 +342,9 @@
         frequencies: [
             [7, 6],
             [7, 13]
-        ]
+        ],
+        crosstabOpen: false, // STATUS BARU: false secara default
+        detailedOpen: false // STATUS BARU untuk Detailed Tests
     };
     
     // --- Fungsi Matematika Lanjutan untuk P-Value (Integrasi) ---
@@ -916,7 +953,39 @@
                 }
             });
         }
+        
+        // Listener untuk Crosstab Accordion
+        document.getElementById('crosstab-header').addEventListener('click', toggleCrosstabVisibility);
+        
+        // Listener untuk Detailed Tests Accordion
+        document.getElementById('detailed-header').addEventListener('click', toggleDetailedVisibility);
     };
+    
+    // FUNGSI BARU: Toggle Crosstab Visibility
+    const toggleCrosstabVisibility = () => {
+        // Toggle state internal
+        state.crosstabOpen = !state.crosstabOpen;
+        
+        // Apply changes to DOM immediately
+        const content = document.getElementById('crosstab-content');
+        const arrow = document.getElementById('crosstab-arrow');
+
+        content.classList.toggle('hidden', !state.crosstabOpen);
+        arrow.classList.toggle('rotated', state.crosstabOpen);
+    }
+    
+    // FUNGSI BARU: Toggle Detailed Tests Visibility
+    const toggleDetailedVisibility = () => {
+        // Toggle state internal
+        state.detailedOpen = !state.detailedOpen;
+        
+        // Apply changes to DOM immediately
+        const content = document.getElementById('detailed-content');
+        const arrow = document.getElementById('detailed-arrow');
+
+        content.classList.toggle('hidden', !state.detailedOpen);
+        arrow.classList.toggle('rotated', state.detailedOpen);
+    }
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
@@ -1230,6 +1299,21 @@
 
         // Terapkan teks
         interpText.innerHTML = mainSentence;
+        
+        // Terapkan status akordion yang disimpan di state
+        const contentCrosstab = document.getElementById('crosstab-content');
+        const arrowCrosstab = document.getElementById('crosstab-arrow');
+        
+        contentCrosstab.classList.toggle('hidden', !state.crosstabOpen);
+        arrowCrosstab.classList.toggle('rotated', state.crosstabOpen);
+        
+        // Terapkan status akordion Detailed Tests
+        const contentDetailed = document.getElementById('detailed-content');
+        const arrowDetailed = document.getElementById('detailed-arrow');
+        
+        contentDetailed.classList.toggle('hidden', !state.detailedOpen);
+        arrowDetailed.classList.toggle('rotated', state.detailedOpen);
+
     };
     
     const renderCrosstab = (stats) => {
@@ -1339,7 +1423,8 @@
         const sections = [
             document.getElementById('crosstab-section'), 
             document.getElementById('detailed-tests-section'), 
-            document.getElementById('interpretation-section-main') // Tambahkan Interpretasi Utama
+            // Interpretasi Utama sekarang ada di dalam detailed-tests-section, tetapi kita juga menggunakannya untuk display: none awal.
+            document.getElementById('interpretation-section-main') 
         ];
 
         if (!stats || stats.N === 0) {
