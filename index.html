@@ -38,10 +38,12 @@
         .input-header-col-2 { grid-column: 2 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
         .input-header-col-3 { grid-column: 3 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
         /* Layout Nama Kategori */
-        .category-input-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: center; }
+        .category-input-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; align-items: center; }
         .category-header-col-2 { grid-column: 2 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
         .category-header-col-3 { grid-column: 3 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
+        .category-header-col-4 { grid-column: 4 / span 1; text-align: center; font-weight: 600; color: #4b5563; }
         .category-row-label { text-align: left; font-weight: 500; }
+        .collapse-button { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; transition: background-color 0.2s; }
         
         .warning-low-count { background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; margin-top: 1rem; border-radius: 0.375rem; }
         .interpretation-crosstab { padding: 1rem; margin-top: 1rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; background-color: #f9fafb; }
@@ -150,7 +152,7 @@
                         </div>
                         <div class="card p-5 text-center">
                             <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">P-Value</h3>
-                            <p id="metric-p-value" class="metric-value text-4xl font-bold mt-1">.257</p>
+                            <p id="metric-p-value" class="metric-value text-4xl font-bold mt-1">0.257</p>
                         </div>
                         <div class="card p-5 text-center">
                             <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Derajat Kebebasan (df)</h3>
@@ -170,7 +172,7 @@
                         <section id="interpretation-section" class="p-4 interpretation-box flex flex-col justify-center">
                             <h3 class="text-xl font-semibold text-green-800 mb-2">Interpretasi Hasil Utama</h3>
                             <p class="text-sm text-green-700 mb-4">Bagian ini menerjemahkan hasil statistik menjadi kesimpulan yang mudah dipahami berdasarkan ambang batas $p < 0.05$.</p>
-                            <p id="interpretation-text" class="text-green-700 font-medium">Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara Variabel X dan Variabel Y (p = .257).</p>
+                            <p id="interpretation-text" class="text-green-700 font-medium">Dengan tingkat signifikansi 0.05, tidak ada cukup bukti untuk menyatakan adanya hubungan statistik yang signifikan antara Variabel X dan Variabel Y (p = 0.257).</p>
                         </section>
                     </div>
                 </section>
@@ -337,7 +339,7 @@
         if (N === 0) return { N: 0 };
         
         const E = Array(R).fill(0).map(() => Array(C).fill(0));
-        let chiSquare = 0, ccChiSquare = 0;
+        let chiSquare = 0, ccChiSquare = 0, likelihoodRatio = 0;
         let lowExpectedCount = 0; // Tambahkan penghitung Low Expected Count
         let minExpectedCount = Infinity;
         let maxObserved = -Infinity;
@@ -365,6 +367,12 @@
                 if (E[i][j] > 0) {
                     const diff = O[i][j] - E[i][j];
                     chiSquare += (diff * diff) / E[i][j];
+                    
+                    // Likelihood Ratio (G-Test)
+                    if (O[i][j] > 0) {
+                        likelihoodRatio += O[i][j] * Math.log(O[i][j] / E[i][j]);
+                    }
+                    
                     if (R === 2 && C === 2) {
                         const diffCC = Math.abs(diff) - 0.5;
                         if (diffCC > 0) {
@@ -375,10 +383,12 @@
             }
         }
         
+        likelihoodRatio *= 2; // G = 2 * sum(O * ln(O/E))
+        
         const df = (R - 1) * (C - 1);
-        // PERBAIKAN: Menggunakan chiSquarePValue untuk semua df
         const pValue = chiSquarePValue(chiSquare, df);
         const ccPValue = (df === 1) ? chiSquarePValue(ccChiSquare, 1) : NaN;
+        const lrPValue = chiSquarePValue(likelihoodRatio, df);
         
         const fisherP = (R === 2 && C === 2) ? fisherExactTest(O[0][0], O[0][1], O[1][0], O[1][1]) : { twoSided: NaN };
 
@@ -387,7 +397,7 @@
         const percentLowExpected = (lowExpectedCount / totalCells) * 100;
         const maxObservedPercent = (maxObserved / N) * 100;
         
-        return { N, O, E, Ri, Cj, chiSquare, ccChiSquare, df, pValue, ccPValue, fisherP, 
+        return { N, O, E, Ri, Cj, chiSquare, ccChiSquare, likelihoodRatio, df, pValue, ccPValue, lrPValue, fisherP, 
                  lowExpectedCount, totalCells, percentLowExpected, minExpectedCount, 
                  maxObserved, maxObservedLoc, maxObservedPercent };
     };
@@ -396,7 +406,7 @@
         if (isNaN(p)) return '-';
         // PERBAIKAN: Selalu tampilkan '0' di depan titik desimal (kecuali untuk p < 0.001)
         if (p < 0.001) return '0.000'; 
-        return p.toFixed(3).replace(/^0\./, '0.'); // Mengganti .257 menjadi 0.257
+        return p.toFixed(3); // Menghilangkan replace(/^0\./, '0.') karena toFixed(3) sudah menghasilkan "0.xxx"
     };
 
     const handleDimensionChange = () => {
@@ -538,6 +548,48 @@
         document.querySelectorAll('#frequency-table-container input').forEach(el => el.addEventListener('input', handleInputChange));
     }
 
+    const performCollapse = (axis, indexToCollapse, targetIndex) => {
+        if (axis === 'R') { // Menggabungkan Baris (Variabel X)
+            if (state.R <= 2) return alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+            
+            // Gabungkan frekuensi
+            for (let j = 0; j < state.C; j++) {
+                state.frequencies[targetIndex][j] += state.frequencies[indexToCollapse][j];
+            }
+            
+            // Hapus baris yang digabungkan dari state
+            state.frequencies.splice(indexToCollapse, 1);
+            
+            // Gabungkan nama kategori
+            state.catXNames[targetIndex] += `/${state.catXNames[indexToCollapse]}`;
+            state.catXNames.splice(indexToCollapse, 1);
+
+            // Update dimensi
+            state.R--;
+            document.getElementById('num_categories_x').value = state.R;
+
+        } else if (axis === 'C') { // Menggabungkan Kolom (Variabel Y)
+            if (state.C <= 2) return alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+
+            // Gabungkan frekuensi
+            for (let i = 0; i < state.R; i++) {
+                state.frequencies[i][targetIndex] += state.frequencies[i][indexToCollapse];
+                state.frequencies[i].splice(indexToCollapse, 1);
+            }
+
+            // Gabungkan nama kategori
+            state.catYNames[targetIndex] += `/${state.catYNames[indexToCollapse]}`;
+            state.catYNames.splice(indexToCollapse, 1);
+
+            // Update dimensi
+            state.C--;
+            document.getElementById('num_categories_y').value = state.C;
+        }
+
+        // Render ulang semua
+        renderInputPanel();
+        renderAll();
+    };
 
     const setupListeners = () => {
         // Listener yang memicu perubahan dimensi (struktur DOM)
@@ -560,13 +612,14 @@
         catHtml += `<span class="category-row-label"></span>`;
         catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
         catHtml += `<span class="category-header-col-3">${state.varYName}</span>`;
+        catHtml += `<span class="category-header-col-4">Gabungkan</span>`; // Kolom baru untuk tombol/dropdown gabung
         catHtml += `</div>`;
         
         // Baris Input Kategori
         for (let i = 0; i < state.R; i++) {
             catHtml += `<div class="category-input-grid">`;
             // Label Baris (Kategori 1, Kategori 2, dst.)
-            catHtml += `<label class="category-row-label self-center">Kategori ${i+1}</label>`; // Menggunakan Kategori 1, 2, 3.. sebagai label baris
+            catHtml += `<label class="category-row-label self-center">Kategori ${i+1}</label>`; 
             
             // Input Variabel X (Nama Kategori X)
             catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center"></div>`;
@@ -577,6 +630,16 @@
             } else {
                 catHtml += `<div></div>`;
             }
+
+            // Kolom Gabungkan (Baris)
+            catHtml += `<div class="flex items-center space-x-1">`;
+            if (state.R > 2) {
+                catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
+            } else {
+                 catHtml += `<span>-</span>`;
+            }
+            catHtml += `</div>`;
+
 
             catHtml += `</div>`;
         }
@@ -593,12 +656,69 @@
                 
                 // Input Variabel Y
                 catHtml += `<div><input type="text" id="catY_name_${j}" value="${state.catYNames[j]}" class="label-input-style text-center"></div>`;
+
+                // Kolom Gabungkan (Kolom Y)
+                catHtml += `<div class="flex items-center space-x-1">`;
+                if (state.C > 2) {
+                     catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
+                } else {
+                     catHtml += `<span>-</span>`;
+                }
+                catHtml += `</div>`;
+
                 catHtml += `</div>`;
             }
         }
+        
+        // Tambahkan tombol Gabung Kolom di bawah input baris
+        if (state.C > 2 && state.C <= state.R) {
+            catHtml += `<div class="mt-4"><h4 class="text-sm font-semibold mb-1">Gabungkan Kolom (Variabel Y):</h4>`;
+            for (let j = 0; j < state.C; j++) {
+                 catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200 mr-2 mb-2" title="Gabungkan kategori ${state.catYNames[j]}">${state.catYNames[j]} [Gabung]</button>`;
+            }
+            catHtml += `</div>`;
+        }
+
 
         catContainer.innerHTML = catHtml;
         
+        // Pasang listener untuk Gabungkan Kategori
+        document.querySelectorAll('.collapse-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const axis = e.target.getAttribute('data-axis');
+                const indexToCollapse = parseInt(e.target.getAttribute('data-index'));
+
+                let targetCategories = axis === 'R' ? state.catXNames.slice() : state.catYNames.slice();
+                
+                // Filter kategori yang tidak bisa digabungkan (yaitu diri sendiri)
+                const options = targetCategories
+                    .map((name, index) => ({ name, index }))
+                    .filter(opt => opt.index !== indexToCollapse);
+
+                if (options.length === 0) {
+                     alert("Tidak ada kategori lain untuk digabungkan.");
+                     return;
+                }
+                
+                // Menggunakan prompt untuk memilih target gabung
+                const promptMsg = `Anda akan menggabungkan '${targetCategories[indexToCollapse]}' (${axis} - ${indexToCollapse + 1}).\n\nMasukkan nomor kategori (1 sampai ${targetCategories.length}) yang akan menjadi target gabung:\n${options.map(o => `${o.index + 1}: ${o.name}`).join('\n')}`;
+                
+                const rawTargetIndex = prompt(promptMsg);
+                if (rawTargetIndex === null || rawTargetIndex.trim() === '') return;
+                
+                const targetCatIndex = parseInt(rawTargetIndex.trim()) - 1;
+
+                if (targetCatIndex === indexToCollapse || targetCatIndex < 0 || (axis === 'R' && targetCatIndex >= state.R) || (axis === 'C' && targetCatIndex >= state.C)) {
+                     alert("Pilihan tidak valid atau target sama dengan kategori yang akan digabungkan.");
+                     return;
+                }
+                
+                // Jika valid, lakukan penggabungan
+                performCollapse(axis, indexToCollapse, targetCatIndex);
+            });
+        });
+
+
         // Panggil renderFrequencyTableOnly di sini untuk memastikan tabel frekuensi pertama kali dimuat
         renderFrequencyTableOnly();
 
@@ -629,9 +749,9 @@
             let warningText = `Peringatan: ${stats.lowExpectedCount} sel (${stats.percentLowExpected.toFixed(1)}%) memiliki frekuensi harapan (Expected Count) kurang dari 5.`;
 
             if (stats.percentLowExpected > 20) {
-                warningText += ` Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin **tidak valid** untuk tabel $R \\times C$ ini.`;
+                warningText += ` Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin **tidak valid** untuk tabel $R \\times C$ ini. Anda disarankan untuk merujuk pada **Uji Likelihood Ratio** atau mempertimbangkan penggabungan kategori.`;
                 if (stats.R === 2 && stats.C === 2) {
-                    warningText += ` Untuk tabel $2 \\times 2$, Anda harus mengacu pada **Fisher's Exact Test** atau **Continuity Correction**.`;
+                    warningText = `Karena persentase ini melebihi 20%, hasil Uji Chi-Square Pearson mungkin **tidak valid**. Anda harus mengacu pada **Fisher's Exact Test** atau **Continuity Correction**.`;
                 }
             } else if (stats.percentLowExpected > 0) {
                  warningText += ` Pastikan setiap sel memiliki nilai harapan (Expected Count) minimal ${stats.minExpectedCount.toFixed(2)}.`;
@@ -640,6 +760,7 @@
             html += `<div class="warning-low-count text-sm">
                         <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
                         <p class="text-yellow-700">${warningText}</p>
+                        ${(state.R > 2 || state.C > 2) ? `<p class="mt-2 text-yellow-700 font-medium">Anda dapat menggunakan fitur **Gabungkan Kategori** di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
                     </div>`;
         } else {
              html += `<p class="mt-4 text-sm text-green-700 font-medium">Asumsi frekuensi harapan terpenuhi (semua sel memiliki Expected Count $\\geq 5$). Uji Chi-Square Pearson valid.</p>`;
@@ -741,6 +862,15 @@
             <td class="px-6 py-4 whitespace-nowrap text-right">${formatPValue(stats.pValue)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
         </tr>`;
+        
+        // Baris Likelihood Ratio
+        bodyHtml += `<tr class="bg-white">
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">Likelihood Ratio</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">${stats.likelihoodRatio.toFixed(3)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">${stats.df}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">${formatPValue(stats.lrPValue)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
+        </tr>`;
 
         if (state.R === 2 && state.C === 2) {
              bodyHtml += `<tr class="bg-slate-50">
@@ -750,7 +880,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-right">${formatPValue(stats.ccPValue)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
             </tr>`;
-             bodyHtml += `<tr>
+             bodyHtml += `<tr class="bg-white">
                 <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">Fisher's Exact Test</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">-</td>
