@@ -47,6 +47,25 @@
         
         .warning-low-count { background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; margin-top: 1rem; border-radius: 0.375rem; }
         .interpretation-crosstab { padding: 1rem; margin-top: 1rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; background-color: #f9fafb; }
+        
+        /* Modal Styling */
+        .modal { z-index: 1000; display: none; background-color: rgba(0, 0, 0, 0.5); }
+        .modal-content { max-width: 400px; }
+        
+        /* Layout Gabung Y di sebelah Gabung X */
+        .collapse-btn-group { display: flex; gap: 0.25rem; }
+
+        /* Styling untuk Tombol Undo Global Baru */
+        .undo-global-btn { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            transform: translateY(-100%); 
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
     </style>
 </head>
 
@@ -126,7 +145,9 @@
                             <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center">
                             <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center">
                         </div>
-
+                        
+                        <!-- Tombol Undo dipindahkan ke sini, tetapi diurus di renderInputPanel -->
+                        <!-- <div id="undo-button-container" class="pt-4"> ... </div> -->
                     </div>
                     
                     <hr class="my-6">
@@ -182,15 +203,61 @@
         </main>
     </div>
 
+    <!-- Modal Penggabungan Kategori -->
+    <div id="collapse-modal" class="modal fixed inset-0 flex items-center justify-center p-4">
+        <div class="modal-content card p-6 w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-slate-900 mb-4">Gabungkan Kategori</h3>
+            <p id="modal-collapse-msg" class="text-sm text-slate-600 mb-4">Anda akan menggabungkan kategori <span class="font-bold" id="cat-to-collapse-name"></span>. Pilih kategori target:</p>
+            
+            <label for="target-category-select" class="block text-sm font-medium text-slate-700 mb-1">Kategori Target (Tempat Penggabungan):</label>
+            <select id="target-category-select" class="label-input-style mb-6"></select>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancel-collapse" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Batal</button>
+                <button type="button" id="confirm-collapse" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Konfirmasi Gabung</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
     let chiSquareChart;
+    let collapseState = { axis: null, indexToCollapse: null }; // State untuk menyimpan data modal
+    let stateHistory = []; // Array untuk menyimpan riwayat state
+
+    // Fungsi untuk membuat deep copy dari objek state
+    const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
+    
+    // Fungsi untuk menyimpan state saat ini ke history
+    const saveStateToHistory = () => {
+        stateHistory.push(deepCopy(state));
+    };
+
+    // Fungsi untuk memulihkan state dari history
+    const undoLastCollapse = () => {
+        if (stateHistory.length > 0) {
+            // Ambil state sebelumnya dari tumpukan
+            state = stateHistory.pop();
+            
+            // Perbarui input dimensi agar sesuai dengan state yang dipulihkan
+            document.getElementById('num_categories_x').value = state.R;
+            document.getElementById('num_categories_y').value = state.C;
+            document.getElementById('varX_name').value = state.varXName;
+            document.getElementById('varY_name').value = state.varYName;
+
+            // Render ulang seluruh UI berdasarkan state yang dipulihkan
+            renderInputPanel();
+            renderAll();
+        }
+    };
+    
     let state = {
         R: 2,
         C: 2,
         varXName: "Variabel X",
         varYName: "Variabel Y",
-        catXNames: ["Kategori 1", "Kategori 2"],
-        catYNames: ["Kategori A", "Kategori B"], 
+        catXNames: ["Kategori A", "Kategori B"], 
+        catYNames: ["Kategori C", "Kategori D"], 
         frequencies: [
             [7, 6],
             [7, 13]
@@ -445,16 +512,15 @@
         }
 
         // Resize dan isi nama default, mempertahankan nama lama
-        // PERBAIKAN: Default di sini harus sesuai dengan permintaan user
         state.catXNames = Array(state.R).fill().map((_, i) => {
              if (i < oldR) return currentCatXNames[i];
              // Set default baru
-             return i === 0 ? "Kategori 1" : (i === 1 ? "Kategori 2" : `Kategori ${i+1}`);
+             return i === 0 ? "Kategori A" : (i === 1 ? "Kategori B" : `Kategori ${i+1}`);
         });
         state.catYNames = Array(state.C).fill().map((_, j) => {
              if (j < oldC) return currentCatYNames[j];
              // Set default baru
-             return j === 0 ? "Kategori A" : (j === 1 ? "Kategori B" : `Kategori ${j+1}`);
+             return j === 0 ? "Kategori C" : (j === 1 ? "Kategori D" : `Kategori ${j+1}`);
         });
 
         // Resize dan isi frekuensi default, mempertahankan data lama
@@ -548,12 +614,64 @@
         document.querySelectorAll('#frequency-table-container input').forEach(el => el.addEventListener('input', handleInputChange));
     }
 
+    // Fungsi yang dipanggil saat tombol Gabung diklik
+    const openCollapseModal = (axis, indexToCollapse) => {
+        const modal = document.getElementById('collapse-modal');
+        const select = document.getElementById('target-category-select');
+        const msgSpan = document.getElementById('cat-to-collapse-name');
+
+        // Simpan state sementara
+        collapseState.axis = axis;
+        collapseState.indexToCollapse = indexToCollapse;
+
+        const targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
+        const nameToCollapse = targetCategories[indexToCollapse];
+        
+        msgSpan.textContent = `'${nameToCollapse}'`;
+        select.innerHTML = ''; // Kosongkan pilihan lama
+
+        // Isi dropdown dengan kategori target yang valid (bukan kategori itu sendiri)
+        let optionsHtml = '<option value="" disabled selected>Pilih Kategori...</option>';
+        targetCategories.forEach((name, index) => {
+            if (index !== indexToCollapse) {
+                optionsHtml += `<option value="${index}">${name} (Kategori ${index + 1})</option>`;
+            }
+        });
+        select.innerHTML = optionsHtml;
+
+        // Tampilkan modal
+        modal.style.display = 'flex';
+    };
+
+    // Fungsi yang dipanggil saat Konfirmasi Gabung di Modal
+    const confirmCollapse = () => {
+        const select = document.getElementById('target-category-select');
+        const targetIndex = parseInt(select.value);
+
+        if (isNaN(targetIndex)) {
+            // Mengganti alert dengan pemberitahuan di konsol
+            console.error("Pilihan kategori target tidak valid.");
+            return;
+        }
+        
+        const { axis, indexToCollapse } = collapseState;
+
+        // Lakukan Penggabungan
+        performCollapse(axis, indexToCollapse, targetIndex);
+
+        // Tutup modal
+        document.getElementById('collapse-modal').style.display = 'none';
+    };
+
     const performCollapse = (axis, indexToCollapse, targetIndex) => {
-        // Pastikan frekuensi sudah terbaca sebelum operasi penggabungan
+        // 0. Simpan state sebelum penggabungan
+        saveStateToHistory();
+        
+        // 1. Pastikan frekuensi sudah terbaca sebelum operasi penggabungan
         handleInputChange({target: {}});
 
         if (axis === 'R') { // Menggabungkan Baris (Variabel X)
-            if (state.R <= 2) return alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+            if (state.R <= 2) return;
             
             // Gabungkan frekuensi
             for (let j = 0; j < state.C; j++) {
@@ -572,7 +690,7 @@
             document.getElementById('num_categories_x').value = state.R;
 
         } else if (axis === 'C') { // Menggabungkan Kolom (Variabel Y)
-            if (state.C <= 2) return alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+            if (state.C <= 2) return;
 
             // Gabungkan frekuensi dan hapus kolom yang digabungkan dari semua baris
             for (let i = 0; i < state.R; i++) {
@@ -589,7 +707,7 @@
             document.getElementById('num_categories_y').value = state.C;
         }
 
-        // Render ulang semua
+        // 3. Render ulang semua
         renderInputPanel();
         renderAll();
     };
@@ -602,6 +720,12 @@
         // Listener untuk perubahan nama variabel (tidak mengubah struktur DOM, hanya memicu update)
         document.getElementById('varX_name').addEventListener('input', handleInputChange);
         document.getElementById('varY_name').addEventListener('input', handleInputChange);
+        
+        // Listener untuk Modal
+        document.getElementById('confirm-collapse').addEventListener('click', confirmCollapse);
+        document.getElementById('cancel-collapse').addEventListener('click', () => {
+            document.getElementById('collapse-modal').style.display = 'none';
+        });
     };
 
     const renderInputPanel = () => {
@@ -615,8 +739,11 @@
         catHtml += `<span class="category-row-label"></span>`;
         catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
         catHtml += `<span class="category-header-col-3">${state.varYName}</span>`;
-        catHtml += `<span class="category-header-col-4">Gabungkan</span>`; // Kolom baru untuk tombol/dropdown gabung
+        catHtml += `<span class="category-header-col-4" id="collapse-header">Gabungkan</span>`; // Tambahkan ID untuk header Gabungkan
         catHtml += `</div>`;
+        
+        // Cek apakah ada riwayat undo
+        const hasHistory = stateHistory.length > 0;
         
         // Baris Input Kategori
         for (let i = 0; i < state.R; i++) {
@@ -634,38 +761,47 @@
                 catHtml += `<div></div>`;
             }
 
-            // Kolom Gabungkan (Baris)
-            catHtml += `<div class="flex items-center space-x-1">`;
+            // Kolom Gabungkan (Baris) - Sekarang Gabung X dan Gabung Y ada di sini
+            catHtml += `<div class="flex items-center space-x-1 collapse-btn-group">`;
+            
+            // Tombol Gabung X
             if (state.R > 2) {
-                // Tombol gabung X selalu di baris yang terpengaruh
                 catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
-            } else {
+            } 
+            
+            // Tombol Gabung Y (Hanya jika ada kategori Y di baris ini)
+            if (state.C > 2 && i < state.C) { 
+                catHtml += `<button type="button" data-axis="C" data-index="${i}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
+            }
+            
+            if (state.R <= 2 && (state.C <= 2 || i >= state.C)) {
                  catHtml += `<span>-</span>`;
             }
+
             catHtml += `</div>`;
 
 
             catHtml += `</div>`;
         }
-
-        // Tampilkan input Y yang tersisa jika C > R
+        
+        // Logika tambahan untuk Gabung Y jika C > R (karena kita membatasi loop utama berdasarkan R)
         if (state.C > state.R) {
             for (let j = state.R; j < state.C; j++) {
                 catHtml += `<div class="category-input-grid">`;
-                // Label Baris Kosong
-                catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`;
+                // Label Baris (Kategori R+1, dst.)
+                catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`; 
                 
                 // Input X Kosong
                 catHtml += `<div></div>`;
                 
-                // Input Variabel Y
+                // Input Variabel Y (Nama Kategori Y)
                 catHtml += `<div><input type="text" id="catY_name_${j}" value="${state.catYNames[j]}" class="label-input-style text-center"></div>`;
 
-                // Kolom Gabungkan (Kolom Y)
-                catHtml += `<div class="flex items-center space-x-1">`;
+                // Kolom Gabungkan (Baris)
+                catHtml += `<div class="flex items-center space-x-1 collapse-btn-group">`;
                 if (state.C > 2) {
                      // Tombol gabung Y untuk kategori yang tersisa
-                     catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
+                     catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
                 } else {
                      catHtml += `<span>-</span>`;
                 }
@@ -675,54 +811,38 @@
             }
         }
         
-        // Tombol Gabung Kolom untuk baris yang sejajar dengan input X (Jika C<=R)
-        if (state.C > 2 && state.C <= state.R) {
-            for (let j = 0; j < state.C; j++) {
-                 catHtml += `<div class="category-input-grid">
-                                <label class="category-row-label self-center"></label>
-                                <div></div>
-                                <div class="col-start-3"><button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200 w-full" title="Gabungkan kategori ${state.catYNames[j]}">Gabung Y</button></div>
-                             </div>`;
-            }
-        }
-
-
         catContainer.innerHTML = catHtml;
         
-        // Pasang listener untuk Gabungkan Kategori
+        // --- LOGIKA TOMBOL UNDO GLOBAL (SETELAH KATEGORI DIRENDER) ---
+        const collapseHeader = document.getElementById('collapse-header');
+        
+        if (hasHistory) {
+            // Tampilkan tombol UNDO di header kolom 'Gabungkan'
+            collapseHeader.innerHTML = `<button type="button" id="undo-global-btn" class="collapse-button bg-slate-300 text-slate-800 hover:bg-slate-400 font-bold w-full" title="Batalkan penggabungan terakhir">Undo</button>`;
+            document.getElementById('undo-global-btn').addEventListener('click', undoLastCollapse);
+        } else {
+            collapseHeader.textContent = 'Gabungkan';
+        }
+        // --- AKHIR LOGIKA UNDO GLOBAL ---
+        
+        
+        // Pasang listener untuk Gabungkan Kategori (menggunakan Modal)
         document.querySelectorAll('.collapse-button').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                // Abaikan tombol UNDO yang diurus secara terpisah di atas
+                if (e.target.id === 'undo-global-btn') return;
+                
                 const axis = e.target.getAttribute('data-axis');
                 const indexToCollapse = parseInt(e.target.getAttribute('data-index'));
 
-                let targetCategories = axis === 'R' ? state.catXNames.slice() : state.catYNames.slice();
+                let targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
                 
-                // Filter kategori yang tidak bisa digabungkan (yaitu diri sendiri)
-                const options = targetCategories
-                    .map((name, index) => ({ name, index: index }))
-                    .filter(opt => opt.index !== indexToCollapse);
-
-                if (options.length === 0) {
-                     alert("Tidak ada kategori lain untuk digabungkan.");
+                if (targetCategories.length <= 2) {
+                     alert("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
                      return;
                 }
                 
-                // Menggunakan prompt untuk memilih target gabung
-                const promptMsg = `Anda akan menggabungkan '${targetCategories[indexToCollapse]}' (${axis} - ${indexToCollapse + 1}).\n\nMasukkan nomor kategori (berdasarkan daftar di bawah) yang akan menjadi TARGET GABUNG:\n${options.map(o => `${o.index + 1}: ${o.name}`).join('\n')}`;
-                
-                const rawTargetIndex = prompt(promptMsg);
-                if (rawTargetIndex === null || rawTargetIndex.trim() === '') return;
-                
-                const targetCatIndex = parseInt(rawTargetIndex.trim()) - 1;
-
-                // FIX: Tambahkan check isNaN dan sederhanakan validasi target index
-                if (isNaN(targetCatIndex) || targetCatIndex < 0 || targetCatIndex >= targetCategories.length || targetCatIndex === indexToCollapse) {
-                     alert("Pilihan tidak valid. Silakan masukkan nomor kategori yang valid (1 sampai " + targetCategories.length + ") yang BUKAN kategori yang akan digabungkan.");
-                     return;
-                }
-                
-                // Jika valid, lakukan penggabungan
-                performCollapse(axis, indexToCollapse, targetCatIndex);
+                openCollapseModal(axis, indexToCollapse);
             });
         });
 
@@ -969,8 +1089,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         // Atur state awal dan setup listener utama
-        state.catXNames = Array(state.R).fill().map((_, i) => `Kategori ${i+1}`);
-        state.catYNames = Array(state.C).fill().map((_, j) => `Kategori ${j+1}`);
+        state.catXNames = Array(state.R).fill().map((_, i) => i < 2 ? (i === 0 ? "Kategori A" : "Kategori B") : `Kategori ${i+1}`);
+        state.catYNames = Array(state.C).fill().map((_, j) => j < 2 ? (j === 0 ? "Kategori C" : "Kategori D") : `Kategori ${j+1}`);
         setupListeners(); 
         handleDimensionChange(); // Panggil ini untuk inisialisasi awal DOM dan hasil
     });
