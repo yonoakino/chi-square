@@ -58,16 +58,16 @@
         .variable-label { font-weight: 500; font-size: 0.875rem; /* Text lebih kecil */ }
         .input-header-col-2, .input-header-col-3 { font-size: 0.75rem; /* Header lebih kecil */ }
         
-        /* Layout Nama Kategori (Grid 4 Kolom) */
+        /* Layout Nama Kategori (Grid DENSITAS TINGGI: 1 Label + 2 Input + 2 Kode + 1 Gabung) */
         .category-input-grid { 
             display: grid; 
-            grid-template-columns: 1fr 1fr 1fr 1fr; 
-            gap: 0.25rem; /* Kurangi gap */
+            grid-template-columns: 0.5fr 1fr 0.5fr 1fr 0.5fr 1fr; /* Label, Nama X, Kode X, Nama Y, Kode Y, Gabung */
+            gap: 0.2rem; /* Kurangi gap */
             align-items: center; 
         }
         .category-row-label { font-size: 0.75rem; } /* Text paling kecil untuk label baris */
 
-        .category-header-col-2, .category-header-col-3, .category-header-col-4 { font-size: 0.75rem; } /* Header kategori lebih kecil */
+        .category-header-col-2, .category-header-col-3, .category-header-col-4, .category-header-col-5, .category-header-col-6 { font-size: 0.75rem; text-align: center; } /* Header kategori lebih kecil */
         
         .collapse-button { font-size: 0.7rem; padding: 0.15rem 0.3rem; } /* Tombol Collapse lebih kecil */
         
@@ -196,27 +196,29 @@
                     
                     <hr class="my-4"> <!-- Kurangi margin -->
                     
-                    <div id="category-names-container" class="space-y-1"></div> <!-- Kurangi space-y -->
+                    <div id="category-names-container" class="space-y-1"></div> <!-- Pindah semua input kategori dan kode di sini -->
                     
-                    <!-- KOTAK BARU UNTUK PENGKODEAN -->
-                    <hr class="my-4"> <!-- Kurangi margin -->
-                    <h3 class="text-base font-semibold text-slate-800 mb-2">Pengkodean</h3> <!-- Judul lebih kecil -->
-                    <div id="coding-panel-container" class="space-y-1"></div> <!-- Kurangi space-y -->
-
+                    <!-- KOTAK PENGKODEAN DIHAPUS -->
+                    
                     <hr class="my-4"> <!-- Kurangi margin -->
 
-                    <h3 class="text-base font-semibold text-slate-800 mb-2">Tabel Frekuensi Observasi</h3> <!-- Judul lebih kecil -->
+                    <!-- KONTROL TABEL FREKUENSI -->
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-base font-semibold text-slate-800">Tabel Frekuensi Observasi</h3>
+                        <div class="flex space-x-2">
+                            <button id="copy-raw-data-btn" class="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition" title="Salin data mentah (long format) ke clipboard">Salin Data Mentah</button>
+                            <button id="toggle-raw-data-btn" class="px-2 py-1 text-xs font-medium text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
+                        </div>
+                    </div>
+                    
                     <div id="frequency-table-container"></div>
                     
-                    <!-- TABEL SPREADSHEET DIHILANGKAN -->
-                    
                     <!-- KOTAK BARU UNTUK DATA MENTAH -->
-                    <h3 class="text-base font-semibold text-slate-800 mb-2 mt-4">Tabel Data Mentah (Kode Numerik)</h3> <!-- Judul lebih kecil -->
-                    <div id="raw-data-header-container" class="flex justify-between items-center mb-1"> <!-- Kurangi margin -->
-                        <p class="text-xs text-slate-500">Data acak, siap disalin ke perangkat lunak statistik.</p>
-                        <button id="copy-raw-data-btn" class="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition">Salin Data Mentah</button>
+                    <div id="raw-data-view-container" class="card p-2 overflow-x-auto max-h-64 hidden mt-4"> <!-- Tambahkan 'hidden' dan margin top -->
+                        <h4 class="text-sm font-semibold text-slate-800 mb-1">Tabel Data Mentah (Kode Numerik)</h4>
+                        <p class="text-xs text-slate-500 mb-2">Kolom menunjukkan Kode X dan Kode Y yang diacak.</p>
+                        <div id="raw-data-table-content"></div>
                     </div>
-                    <div id="raw-data-view-container" class="card p-2 overflow-x-auto max-h-64"></div> <!-- Max-height lebih kecil -->
 
                 </div>
             </aside>
@@ -659,17 +661,8 @@
         } else {
              // Jika yang diubah adalah Nama Kategori, Kode, atau Frekuensi,
              // PERBAIKAN: Hanya perbarui header variabel di panel input dan render ulang tabel frekuensi
-             document.querySelector('#category-names-container .category-header-col-2').textContent = state.varXName;
-             document.querySelector('#category-names-container .category-header-col-3').textContent = state.varYName;
-             
-             // Perbarui header panel pengkodean juga
-             const codingHeaderX = document.querySelector('#coding-panel-container .coding-header-col-2');
-             if(codingHeaderX) codingHeaderX.textContent = state.varXName;
-             const codingHeaderY = document.querySelector('#coding-panel-container .coding-header-col-3');
-             if(codingHeaderY) codingHeaderY.textContent = state.varYName;
-             
-             // Panggil fungsi rendering khusus untuk Tabel Frekuensi agar nama kategori di kolom dan baris di tabel frekuensi terupdate
-             renderFrequencyTableOnly();
+             // Note: Karena kode sudah digabung, kita tidak perlu lagi memisahkan header di sini. Cukup panggil renderInputPanel().
+             renderInputPanel();
         }
 
         renderAll();
@@ -706,50 +699,7 @@
         renderRawDataView(); 
     }
     
-    // FUNGSI BARU: Merender Panel Pengkodean
-    const renderCodingPanel = () => {
-        const codingContainer = document.getElementById('coding-panel-container');
-        
-        let codingHtml = `<div class="category-input-grid mb-1">
-            <span class="category-row-label"></span>
-            <span class="category-header-col-2 coding-header-col-2">${state.varXName}</span>
-            <span class="category-header-col-3 coding-header-col-3">${state.varYName}</span>
-            <span class="category-header-col-4">Kode</span>
-        </div>`;
-        
-        const maxDim = Math.max(state.R, state.C);
-        
-        for(let k = 0; k < maxDim; k++) {
-             codingHtml += `<div class="category-input-grid">`;
-             codingHtml += `<label class="category-row-label self-center">Kategori ${k+1}</label>`; 
-
-             // Input Kode X
-             if (k < state.R) {
-                 codingHtml += `<div><input type="text" id="catX_code_${k}" value="${state.catXCodes[k]}" class="label-input-style text-center text-xs"></div>`;
-             } else {
-                 codingHtml += `<div></div>`;
-             }
-             
-             // Input Kode Y
-             if (k < state.C) {
-                 codingHtml += `<div><input type="text" id="catY_code_${k}" value="${state.catYCodes[k]}" class="label-input-style text-center text-xs"></div>`;
-             } else {
-                 codingHtml += `<div></div>`;
-             }
-             
-             // Kode Numerik (Label)
-             codingHtml += `<div><span class="font-medium text-slate-700 text-xs">Kode: ${k}</span></div>`;
-             
-             codingHtml += `</div>`;
-        }
-        
-        codingContainer.innerHTML = codingHtml;
-
-        // Pasang listener untuk input Kode
-        document.querySelectorAll('#coding-panel-container input').forEach(el => el.addEventListener('input', handleInputChange));
-
-    }
-
+    // FUNGSI renderCodingPanel DIHILANGKAN, digabungkan ke renderInputPanel
 
     // FUNGSI BARU: Mengacak array menggunakan Fisher-Yates Shuffle
     const shuffleArray = (array) => {
@@ -803,8 +753,8 @@
 
     // FUNGSI BARU: Merender Tabel Data Mentah (Raw Data) secara acak menggunakan kode
     const renderRawDataView = () => {
-        const rawDataContainer = document.getElementById('raw-data-view-container');
-        // PERHATIAN: Header Tabel di sini masih perlu agar pengguna tahu kolom mana yang mana
+        const rawDataContainer = document.getElementById('raw-data-table-content');
+        
         let rawDataHtml = `<table class="raw-data-table w-full"><thead><tr>
                             <th class="bg-slate-200">${state.varXName}</th>
                             <th class="bg-slate-200">${state.varYName}</th>
@@ -961,6 +911,12 @@
         // Listener untuk Tombol Copy
         document.getElementById('copy-raw-data-btn').addEventListener('click', copyRawData);
         
+        // Listener untuk Tombol Toggle Raw Data
+        document.getElementById('toggle-raw-data-btn').addEventListener('click', () => {
+            const container = document.getElementById('raw-data-view-container');
+            container.classList.toggle('hidden');
+        });
+        
         // Listener untuk Modal
         document.getElementById('confirm-collapse').addEventListener('click', confirmCollapse);
         document.getElementById('cancel-collapse').addEventListener('click', () => {
@@ -970,17 +926,19 @@
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
-        const codingContainer = document.getElementById('coding-panel-container');
-
+        
         // Render input nama kategori
-        let catHtml = `<h3 class="text-md font-semibold text-slate-800 mb-1">Nama Kategori</h3>`;
+        let catHtml = `<h3 class="text-md font-semibold text-slate-800 mb-1">Nama Kategori & Kode</h3>`; // Judul baru
         
         // Header Nama Kategori
+        // Grid baru dengan 6 kolom: Label Kategori, Nama X, Kode X, Nama Y, Kode Y, Gabungkan
         catHtml += `<div class="category-input-grid mb-1">`;
         catHtml += `<span class="category-row-label"></span>`;
         catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
-        catHtml += `<span class="category-header-col-3">${state.varYName}</span>`;
-        catHtml += `<span class="category-header-col-4" id="collapse-header">Gabungkan</span>`; // Tambahkan ID untuk header Gabungkan
+        catHtml += `<span class="category-header-col-3">Kode X</span>`; // Header Kode X
+        catHtml += `<span class="category-header-col-4">${state.varYName}</span>`;
+        catHtml += `<span class="category-header-col-5">Kode Y</span>`; // Header Kode Y
+        catHtml += `<span class="category-header-col-6" id="collapse-header">Gabungkan</span>`; // Tambahkan ID untuk header Gabungkan
         catHtml += `</div>`;
         
         // Cek apakah ada riwayat undo
@@ -995,12 +953,23 @@
             // Input Variabel X (Nama Kategori X)
             catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs"></div>`;
             
+            // Input Kode X
+            catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs"></div>`;
+            
             // Input Variabel Y (Nama Kategori Y)
             if (i < state.C) {
                 catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center text-xs"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
+
+            // Input Kode Y
+            if (i < state.C) {
+                catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs"></div>`;
+            } else {
+                catHtml += `<div></div>`;
+            }
+
 
             // Kolom Gabungkan (Baris) - Sekarang Gabung X dan Gabung Y ada di sini
             catHtml += `<div class="flex items-center space-x-1 collapse-btn-group">`;
@@ -1032,11 +1001,15 @@
                 // Label Baris (Kategori R+1, dst.)
                 catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`; 
                 
-                // Input X Kosong
+                // Input X Kosong dan Kode X Kosong
+                catHtml += `<div></div>`;
                 catHtml += `<div></div>`;
                 
                 // Input Variabel Y (Nama Kategori Y)
                 catHtml += `<div><input type="text" id="catY_name_${j}" value="${state.catYNames[j]}" class="label-input-style text-center text-xs"></div>`;
+
+                // Input Kode Y
+                catHtml += `<div><input type="text" id="catY_code_${j}" value="${state.catYCodes[j]}" class="input-style text-center text-xs"></div>`;
 
                 // Kolom Gabungkan (Baris)
                 catHtml += `<div class="flex items-center space-x-1 collapse-btn-group">`;
@@ -1088,11 +1061,10 @@
         });
 
 
-        // Panggil renderCodingPanel dan renderFrequencyTableOnly
-        renderCodingPanel();
+        // Hilangkan panggilan renderCodingPanel()
         renderFrequencyTableOnly();
 
-        // Tambahkan listener untuk input kategori yang BARU dibuat (input Frekuensi dipasang di renderFrequencyTableOnly)
+        // Tambahkan listener untuk input kategori dan kode yang BARU dibuat 
         document.querySelectorAll('#category-names-container input').forEach(el => el.addEventListener('input', handleInputChange));
     };
     
