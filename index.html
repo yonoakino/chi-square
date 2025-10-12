@@ -276,13 +276,23 @@
                     
                     <hr class="my-3"> <!-- MENGURANGI MARGIN GARIS HORIZONTAL: my-4 -> my-3 -->
                     
-                    <!-- Kontainer Statis untuk Tombol UNDO & Kontrol Baru -->
-                    <div id="undo-container" class="mb-2 flex justify-between items-center"> <!-- UBAH KE JUSTIFY-BETWEEN -->
+                    <!-- Kontainer Nama Kategori dan Kontrol (Toggle Kode & Gabung) -->
+                    <div class="flex justify-between items-center mb-1">
+                        <h3 class="text-md font-semibold text-slate-800">Nama Kategori & Kode</h3>
                         <div class="flex gap-2 text-xs font-medium">
+                            <!-- TOMBOL BARU: UNDO -->
+                            <button id="undo-global-btn" onclick="undoLastCollapse()" disabled class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm" title="Batalkan penggabungan terakhir">UNDO</button>
+                            <!-- TOMBOL KODE -->
                             <button id="toggle-coding-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm" title="Tampilkan/Sembunyikan Kode X dan Kode Y">Kode</button>
+                            <!-- TOMBOL GABUNG KONTROL -->
                             <button id="toggle-collapse-ctrl-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm hidden" title="Tampilkan/Sembunyikan Tombol Gabung Kategori">Gabung Kontrol</button>
                         </div>
-                        <div id="undo-button-placeholder"></div> <!-- Tempat untuk tombol UNDO -->
+                    </div>
+
+                    <!-- Kontainer Statis untuk Tombol UNDO (DIKOSONGKAN KARENA BUTTON UNDO DIPINDAH KE ATAS) -->
+                    <div id="undo-container" class="mb-2 flex justify-end items-center"> <!-- UBAH KE JUSTIFY-END -->
+                        <!-- Tombol Kode dan Gabung sudah dipindahkan ke atas -->
+                        <!-- <div id="undo-button-placeholder"></div> --> <!-- Tempat untuk tombol UNDO (DIPINDAH) -->
                     </div> <!-- MENGURANGI MARGIN BOTTOM: mb-3 -> mb-2 -->
                     
                     <div id="category-names-container" class="space-y-0.5"></div> <!-- MENGURANGI SPACE VERTICAL: space-y-1 -> space-y-0.5 -->
@@ -1084,6 +1094,7 @@
         } else {
             button.classList.remove('bg-red-600', 'text-white', 'hover:bg-red-700');
             button.classList.add('bg-slate-200', 'text-slate-700');
+            button.classList.add('hover:bg-slate-300'); // Pastikan hover kembali ada
             button.textContent = 'Gabung Kontrol';
         }
     }
@@ -1110,21 +1121,14 @@
         // Listener untuk Tombol Toggle Gabung Kontrol
         document.getElementById('toggle-collapse-ctrl-btn').addEventListener('click', toggleCollapseControlVisibility);
         
+        // Listener untuk Tombol UNDO (Karena sudah dipindah ke baris header)
+        document.getElementById('undo-global-btn').addEventListener('click', undoLastCollapse);
+        
         // Listener untuk Modal
         document.getElementById('confirm-collapse').addEventListener('click', confirmCollapse);
         document.getElementById('cancel-collapse').addEventListener('click', () => {
             document.getElementById('collapse-modal').style.display = 'none';
         });
-
-        // Listener untuk Tombol Undo Global
-        const undoPlaceholder = document.getElementById('undo-button-placeholder');
-        if (undoPlaceholder) { // Check if it exists before adding listener
-            undoPlaceholder.addEventListener('click', (e) => {
-                if(e.target.id === 'undo-global-btn') {
-                    undoLastCollapse();
-                }
-            });
-        }
         
         // Listener untuk Toggle Crosstab (Kini berada di Panel Input)
         document.getElementById('toggle-crosstab-btn').addEventListener('click', () => toggleResultsVisibility('crosstab-content', 'crosstab'));
@@ -1137,32 +1141,27 @@
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
-        const undoPlaceholder = document.getElementById('undo-button-placeholder');
+        const undoBtn = document.getElementById('undo-global-btn');
         const collapseCtrlBtn = document.getElementById('toggle-collapse-ctrl-btn');
         
         // Cek apakah ada riwayat undo
         const hasHistory = stateHistory.length > 0;
-
-        // --- 1. Render Tombol UNDO Global di Lokasi Placeholder ---
-        if (undoPlaceholder) {
-            if (hasHistory) {
-                undoPlaceholder.innerHTML = `<button type="button" id="undo-global-btn" class="px-3 py-1 text-xs font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600 transition shadow-md" title="Batalkan penggabungan terakhir">UNDO</button>`;
-            } else {
-                undoPlaceholder.innerHTML = '';
-            }
+        
+        // --- 1. Kelola Tombol UNDO (Status Aktif/Disabled) ---
+        undoBtn.disabled = !hasHistory;
+        if (hasHistory) {
+            undoBtn.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+            undoBtn.classList.add('bg-yellow-500', 'text-white', 'hover:bg-yellow-600');
+        } else {
+            undoBtn.classList.remove('bg-yellow-500', 'text-white', 'hover:bg-yellow-600');
+            undoBtn.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
         }
         
         // --- 2. Tentukan visibilitas tombol Gabung Kontrol ---
-        // Tombol Gabung Kontrol hanya muncul jika setidaknya ada satu variabel yang > 2 kategori
         const showCollapseCtrlButton = state.R > 2 || state.C > 2;
         collapseCtrlBtn.classList.toggle('hidden', !showCollapseCtrlButton);
-
-
-        // --- 3. Render Header Kategori & Kode ---
-        let catHtml = `<div class="flex justify-between items-center mb-1">
-                             <h3 class="text-md font-semibold text-slate-800">Nama Kategori & Kode</h3>
-                             <div id="undo-placeholder-header"></div>
-                        </div>`; // Judul baru
+        
+        // --- 3. Render Header Kategori & Kontrol Toggle di sampingnya (SUDAH DI TINGKAT HTML) ---
         
         // Tentukan template grid baru berdasarkan status toggle
         let gridTemplateColumns = '1fr';
@@ -1185,6 +1184,7 @@
         // Kolom Gabung Y (0.4fr)
         if (state.collapseControlOpen && state.C > 2) gridTemplateColumns += ' 0.4fr';
 
+        let catHtml = '';
 
         // Terapkan ke Header Grid
         catHtml += `<div class="category-input-grid mb-1" style="grid-template-columns: ${gridTemplateColumns}">`;
