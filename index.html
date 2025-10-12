@@ -146,6 +146,7 @@
             <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">UJI CHI-SQUARE</h1> 
             
             <div class="mt-2 flex flex-col justify-center items-center gap-2 text-sm">
+                <p class="text-slate-600 font-medium">Created By Yono</p> <!-- Label 'Created By Yono' ditambahkan di sini -->
                 <!-- ELEMEN CREATOR DAN WHATSAPP DIHAPUS SEPENUHNYA DARI SINI -->
             </div>
         </header>
@@ -293,10 +294,8 @@
     </div>
     
     <!-- KONTROL TOMBOL BARU (FLOATING BUTTONS) -->
-    <!-- Diubah menjadi fixed di bawah, berbaris horizontal, di tengah, menghilangkan background/shadow/border atas kecuali padding dan z-index tinggi -->
-    <div class="fixed bottom-0 left-0 right-0 flex justify-center gap-2 p-3 z-50 overflow-x-auto"> 
-        <!-- Menggunakan `left-0 right-0` dan `justify-center` untuk menengahkan horizontal dan memastikan lebar penuh -->
-        <!-- Menghilangkan `bg-white/90 backdrop-blur-sm shadow-2xl border-t border-slate-200 rounded-t-lg` -->
+    <!-- Padding horizontal dikurangi (px-2) dan vertikal dipertahankan (py-3) -->
+    <div class="fixed bottom-0 left-0 right-0 flex justify-center gap-2 py-3 px-2 z-50 overflow-x-auto"> 
         
         <!-- Tombol Crosstab -->
         <button id="toggle-crosstab-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Tabel Kontingensi">Crosstab</button>
@@ -309,6 +308,9 @@
 
         <!-- Tombol Copy Raw Data -->
         <button id="copy-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Salin data mentah (long format) ke clipboard">Copy Data</button>
+
+        <!-- Tombol WhatsApp (BARU) -->
+        <a href="https://wa.me/6281234567890" target="_blank" class="flex-shrink-0 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition py-2 px-3 shadow-lg" title="Hubungi kami via WhatsApp">WhatsApp</a>
     </div>
     <!-- END FLOATING BUTTONS -->
 
@@ -855,7 +857,7 @@
         });
         
         if (totalCount === 0) {
-             rawDataHtml += `<tr><td colspan="2" class="text-center text-slate-500">Masukkan frekuensi observasi untuk membuat data mentah.</td></tr>`;
+            rawDataHtml += `<tr><td colspan="2" class="text-center text-slate-500">Masukkan frekuensi observasi untuk membuat data mentah.</td></tr>`;
         }
 
         rawDataHtml += `</tbody></table>`;
@@ -1253,9 +1255,9 @@
                     let targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
                     
                     if (targetCategories.length <= 2) {
-                         // Perubahan alert menjadi console.error
-                         console.error("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
-                         return;
+                           // Perubahan alert menjadi console.error
+                           console.error("Tidak bisa menggabungkan. Minimal kategori adalah 2.");
+                           return;
                     }
                     openCollapseModal(axis, indexToCollapse);
                 } 
@@ -1320,12 +1322,13 @@
             if (rowInterpretations.length === 0) { // Hanya 1 baris
                 interpretationContent += `${lastRow}.`;
             } else if (rowInterpretations.length === 1) { // 2 baris (kasus 2x2 paling umum)
-                interpretationContent += `${rowInterpretations[0]}, sedangkan ${lastRow}.`;
+                interpretationContent = `<p class="text-xs text-slate-700">Berdasarkan tabel di atas menunjukkan bahwa dari total ${stats.N} kasus valid: ${rowInterpretations[0]}, sedangkan ${lastRow}.</p>`;
             } else { // > 2 baris
                 interpretationContent += rowInterpretations.map((text, idx) => {
                     return idx === rowInterpretations.length - 1 ? `${text}` : `${text}, `;
                 }).join('');
                 interpretationContent += `, sedangkan ${lastRow}.`;
+                interpretationContent = `<p class="text-xs text-slate-700">${interpretationContent.replace(/, sedangkan/, ' sedangkan')}</p>`;
             }
 
             // Fallback untuk 2 baris (kasus paling umum 2x2)
@@ -1369,9 +1372,9 @@
             
             // Perbaikan Asumsi: Mengubah teks di sini
             html += `<div class="warning-low-count text-xs">
-                         <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
-                         <p class="text-yellow-700">${warningText}</p>
-                         ${(state.R > 2 || state.C > 2) ? `<p class="mt-1 text-yellow-700 font-medium">Anda dapat menggunakan fitur Gabungkan Kategori di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
+                           <p class="font-bold text-yellow-800">PERHATIAN ASUMSI:</p>
+                           <p class="text-yellow-700">${warningText}</p>
+                           ${(state.R > 2 || state.C > 2) ? `<p class="mt-1 text-yellow-700 font-medium">Anda dapat menggunakan fitur Gabungkan Kategori di Panel Input untuk memperbaiki pelanggaran asumsi ini.</p>` : ''}
                     </div>`;
         } else {
              // Perbaikan Asumsi: Mengubah teks di sini
@@ -1507,12 +1510,12 @@
         if (!stats || stats.N === 0) { head.innerHTML = ''; body.innerHTML = ''; return; }
 
         let headHtml = `<tr class="bg-slate-50">
-                            <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th>
-                            <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th>
-                            <th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">${state.varYName}</th>
-                            <th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
-                        </tr>
-                        <tr class="bg-slate-50">`;
+                             <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th>
+                             <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th>
+                             <th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">${state.varYName}</th>
+                             <th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
+                         </tr>
+                         <tr class="bg-slate-50">`;
         // Baris kedua head (kolom kategori Y)
         state.catYNames.forEach(name => {
             headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500">${name}</th>`;
@@ -1578,19 +1581,19 @@
 
         if (state.R === 2 && state.C === 2) {
              bodyHtml += `<tr class="bg-slate-50">
-                <td class="px-6 py-1 whitespace-nowrap font-medium text-slate-700">Continuity Correction</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">${stats.ccChiSquare.toFixed(3)}</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">1</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">${formatPValue(stats.ccPValue)}</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
-            </tr>`;
+                 <td class="px-6 py-1 whitespace-nowrap font-medium text-slate-700">Continuity Correction</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">${stats.ccChiSquare.toFixed(3)}</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">1</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">${formatPValue(stats.ccPValue)}</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
+             </tr>`;
              bodyHtml += `<tr class="bg-white">
-                <td class="px-6 py-1 whitespace-nowrap font-medium text-slate-700">Fisher's Exact Test</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
-                <td class="px-6 py-1 whitespace-nowrap text-right">${formatPValue(stats.fisherP.twoSided)}</td>
-            </tr>`;
+                 <td class="px-6 py-1 whitespace-nowrap font-medium text-slate-700">Fisher's Exact Test</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">-</td>
+                 <td class="px-6 py-1 whitespace-nowrap text-right">${formatPValue(stats.fisherP.twoSided)}</td>
+             </tr>`;
         }
         
         bodyHtml += `<tr class="bg-green-50 font-bold">
