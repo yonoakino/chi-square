@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UJI CHI-SQUARE INTERAKTIF</title>
+    <title>UJI CHI-SQUARE</title>
     <!-- Chosen Palette: Calm Neutrals & Sage -->
     <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci dan Interpretasi, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi). Perubahan terbaru memprioritiskan penyajian output statistik formal dan interpretasi tekstual secara langsung. -->
     <!-- Visualization & Content Choices: 
@@ -104,7 +104,45 @@
         }
 
         /* Styling untuk Judul Utama */
-        h1 { font-size: 2.75rem; } /* MENGGANTI DARI 4.5rem (8xl) KE 3.75rem (6xl) */
+        h1 { 
+            font-size: 2.75rem; /* UKURAN 4XL */
+            /* Gaya 3D Text */
+            color: #334155; /* slate-700 */
+            text-shadow: 
+                0 1px 0 #ccc,
+                0 2px 0 #c9c9c9,
+                0 3px 0 #bbb,
+                0 4px 0 #b9b9b9,
+                0 5px 0 #aaa,
+                0 6px 1px rgba(0,0,0,.1),
+                0 0 5px rgba(0,0,0,.1),
+                0 1px 3px rgba(0,0,0,.3),
+                0 3px 5px rgba(0,0,0,.2),
+                0 5px 10px rgba(0,0,0,.25),
+                0 10px 10px rgba(0,0,0,.2),
+                0 20px 20px rgba(0,0,0,.15);
+            transition: all 0.2s ease-in-out;
+        }
+
+        h1:hover {
+            color: #059669; /* emerald-600 */
+            text-shadow: 
+                0 1px 0 #90c299,
+                0 2px 0 #89bd92,
+                0 3px 0 #81b88a,
+                0 4px 0 #7cb382,
+                0 5px 0 #74ae7a,
+                0 6px 1px rgba(0, 128, 0, 0.2), /* Shadow yang lebih hijau */
+                0 0 5px rgba(0, 128, 0, 0.1),
+                0 1px 3px rgba(0, 128, 0, 0.3),
+                0 3px 5px rgba(0, 128, 0, 0.2),
+                0 5px 10px rgba(0, 128, 0, 0.25),
+                0 10px 10px rgba(0, 128, 0, 0.2),
+                0 20px 20px rgba(0, 128, 0, 0.15);
+            transform: translateY(-3px) scale(1.02);
+            cursor: default;
+        }
+        
         h2 { font-size: 1.5rem; } /* H2 sedikit dikurangi dari 2xl */
         h3 { font-size: 1.1rem; } /* H3 sedikit dikurangi dari xl */
 
@@ -129,6 +167,9 @@
             margin-bottom: 0.5rem; /* Tambahkan sedikit margin bawah untuk pemisahan */
         }
         
+        /* Kelas baru untuk menyembunyikan kolom (karena display:none pada grid item bisa sulit) */
+        .hidden-col { display: none; }
+
     </style>
 </head>
 
@@ -137,7 +178,7 @@
     <div class="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-0"> <!-- Ganti p-4 sm:p-6 lg:p-8 menjadi py-4 px-0 -->
 
         <header class="text-center mb-6 px-4"> <!-- Tambahkan px-4 untuk header -->
-            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">UJI CHI-SQUARE</h1> <!-- JUDUL DIPERBARUI & UKURAN DIPERBESAR (6xl) -->
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">UJI CHI-SQUARE</h1> <!-- JUDUL DIPERBARUI & UKURAN 4xl -->
             <!-- SUB-JUDUL DIHAPUS -->
         </header>
 
@@ -148,7 +189,7 @@
                 
                 <section id="crosstab-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
                     <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
-                        <h3 class="text-xl font-bold text-slate-900">2. Tabel Kontingensi (Crosstabulation)</h3>
+                        <h3 class="text-xl font-bold text-slate-900">2. Crosstab</h3> <!-- LABEL DIUBAH -->
                         <!-- TOMBOL TOGGLE ASLI DIHAPUS, DIPINDAHKAN KE PANEL INPUT -->
                     </div>
                     <!-- Konten Tabel Crosstabulation -->
@@ -166,7 +207,7 @@
                 
                 <section id="detailed-tests-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
                     <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
-                        <h3 class="text-xl font-bold text-slate-900">3. Hasil Uji Statistik Rinci</h3>
+                        <h3 class="text-xl font-bold text-slate-900">3. Hasil</h3> <!-- LABEL DIUBAH -->
                         <!-- TOMBOL TOGGLE ASLI DIHAPUS, DIPINDAHKAN KE PANEL INPUT -->
                     </div>
                     <div id="detailed-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
@@ -175,11 +216,11 @@
                                 <table class="w-full text-sm">
                                     <thead class="bg-slate-50">
                                         <tr>
-                                            <th class="px-6 py-1 text-left text-xs font-medium text-slate-500 tracking-wider">Uji Statistik</th>
-                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 tracking-wider">Nilai</th>
-                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 tracking-wider">df</th>
-                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 tracking-wider">Asymp. Sig. (2-sided)</th>
-                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 tracking-wider">Exact Sig. (2-sided)</th>
+                                            <th class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Uji Statistik</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Nilai</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">df</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Asymp. Sig. (2-sided)</th>
+                                            <th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Exact Sig. (2-sided)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="detailed-tests-body" class="bg-white divide-y divide-slate-200"></tbody>
@@ -204,7 +245,7 @@
             <!-- KOLOM KANAN (INPUT - BARIS 1) -->
             <aside class="lg:col-span-1 order-1 lg:order-1">
                 <div class="card p-3 sticky top-8"> <!-- MENGURANGI PADDING CARD: p-4 -> p-3 -->
-                    <h2 class="text-xl font-bold text-slate-900 mb-1">1. Panel Input Data</h2>
+                    <h2 class="text-xl font-bold text-slate-900 mb-1">1. Input Data</h2> <!-- LABEL DIUBAH -->
                     <!-- DESKRIPSI DIHAPUS -->
                     
                     <div class="space-y-2"> <!-- MENGURANGI SPACE VERTICAL: space-y-3 -> space-y-2 -->
@@ -218,15 +259,15 @@
                         <!-- Variabel X Row -->
                         <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
                             <!-- LABEL DIHAPUS -->
-                            <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center text-xs">
-                            <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center text-xs">
+                            <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center text-xs" oninput="handleInputChange(event)">
+                            <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)">
                         </div>
                         
                         <!-- Variabel Y Row -->
                         <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
                             <!-- LABEL DIHAPUS -->
-                            <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center text-xs">
-                            <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs">
+                            <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center text-xs" oninput="handleInputChange(event)">
+                            <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)">
                         </div>
                         
                         <!-- Tombol Undo dipindahkan ke sini, tetapi diurus di renderInputPanel -->
@@ -235,8 +276,14 @@
                     
                     <hr class="my-3"> <!-- MENGURANGI MARGIN GARIS HORIZONTAL: my-4 -> my-3 -->
                     
-                    <!-- Kontainer Statis untuk Tombol UNDO -->
-                    <div id="undo-container" class="mb-2 flex justify-end"></div> <!-- MENGURANGI MARGIN BOTTOM: mb-3 -> mb-2 -->
+                    <!-- Kontainer Statis untuk Tombol UNDO & Kontrol Baru -->
+                    <div id="undo-container" class="mb-2 flex justify-between items-center"> <!-- UBAH KE JUSTIFY-BETWEEN -->
+                        <div class="flex gap-2 text-xs font-medium">
+                            <button id="toggle-coding-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm" title="Tampilkan/Sembunyikan Kode X dan Kode Y">Kode</button>
+                            <button id="toggle-collapse-ctrl-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm hidden" title="Tampilkan/Sembunyikan Tombol Gabung Kategori">Gabung Kontrol</button>
+                        </div>
+                        <div id="undo-button-placeholder"></div> <!-- Tempat untuk tombol UNDO -->
+                    </div> <!-- MENGURANGI MARGIN BOTTOM: mb-3 -> mb-2 -->
                     
                     <div id="category-names-container" class="space-y-0.5"></div> <!-- MENGURANGI SPACE VERTICAL: space-y-1 -> space-y-0.5 -->
                     
@@ -246,9 +293,9 @@
 
                     <!-- KONTROL TABEL FREKUENSI -->
                     <div class="flex justify-between items-center mb-1"> <!-- MENGURANGI MARGIN BOTTOM: mb-2 -> mb-1 -->
-                        <h3 class="text-base font-semibold text-slate-800">Frekuensi</h3>
+                        <h3 class="text-base font-semibold text-slate-800">Frekuensi</h3> <!-- LABEL DIUBAH -->
                         <!-- Elemen baru untuk menampilkan p-value -->
-                        <span id="p-value-display" class="text-xs font-bold px-2 py-0.5 rounded-full">--</span>
+                        <span id="p-value-display" class="text-sm font-extrabold px-3 py-1 rounded-full shadow-md">--</span>
                         <!-- Hapus tombol Salin dan Data Mentah di sini -->
                     </div>
                     
@@ -291,7 +338,7 @@
         <button id="toggle-detailed-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan Hasil Uji Statistik Rinci">Hasil</button>
 
         <!-- Tombol Toggle Raw Data -->
-        <button id="toggle-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data</button>
+        <button id="toggle-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Tampilkan/Sembunyikan tabel data mentah (numerik)">Data Mentah</button>
 
         <!-- Tombol Copy Raw Data -->
         <button id="copy-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Salin data mentah (long format) ke clipboard">Copy Data</button>
@@ -321,6 +368,27 @@
     let stateHistory = []; // Array untuk menyimpan riwayat state
     const ALPHA = 0.05; // Nilai signifikansi standar
 
+    // Tambahkan state baru untuk mengontrol visibilitas kolom
+    let state = {
+        R: 2,
+        C: 2,
+        varXName: "Variabel X",
+        varYName: "Variabel Y",
+        catXNames: ["Kategori A", "Kategori B"], 
+        catYNames: ["Kategori C", "Kategori D"], 
+        catXCodes: ["0", "1"],
+        catYCodes: ["0", "1"],
+        frequencies: [
+            [7, 6],
+            [7, 13]
+        ],
+        crosstabOpen: false,
+        detailedOpen: false,
+        codingOpen: false, // NEW: Kontrol visibilitas Kode X/Y
+        collapseControlOpen: false // NEW: Kontrol visibilitas tombol Gabung Kontrol
+    };
+
+
     // Fungsi untuk membuat deep copy dari objek state
     const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
     
@@ -347,23 +415,6 @@
         }
     };
     
-    let state = {
-        R: 2,
-        C: 2,
-        varXName: "Variabel X",
-        varYName: "Variabel Y",
-        catXNames: ["Kategori A", "Kategori B"], 
-        catYNames: ["Kategori C", "Kategori D"], 
-        // Tambahkan array untuk menyimpan kode numerik
-        catXCodes: ["0", "1"],
-        catYCodes: ["0", "1"],
-        frequencies: [
-            [7, 6],
-            [7, 13]
-        ],
-        crosstabOpen: false, // UBAH DEFAULT KE FALSE
-        detailedOpen: false // UBAH DEFAULT KE FALSE
-    };
     
     // --- Fungsi Matematika Lanjutan untuk P-Value (Integrasi) ---
 
@@ -996,6 +1047,46 @@
             button.textContent = 'Data Mentah';
         }
     }
+    
+    // FUNGSI BARU: Toggle Kolom Kode
+    const toggleCodingVisibility = () => {
+        const button = document.getElementById('toggle-coding-btn');
+        state.codingOpen = !state.codingOpen;
+        
+        // Render ulang panel untuk menerapkan perubahan visibilitas grid
+        renderInputPanel(); 
+
+        // Update tampilan tombol
+        if (state.codingOpen) {
+            button.classList.remove('bg-slate-200', 'text-slate-700');
+            button.classList.add('bg-green-600', 'text-white');
+            button.textContent = 'Tutup Kode';
+        } else {
+            button.classList.remove('bg-green-600', 'text-white');
+            button.classList.add('bg-slate-200', 'text-slate-700');
+            button.textContent = 'Kode';
+        }
+    }
+
+    // FUNGSI BARU: Toggle Kolom Gabung Kontrol
+    const toggleCollapseControlVisibility = () => {
+        const button = document.getElementById('toggle-collapse-ctrl-btn');
+        state.collapseControlOpen = !state.collapseControlOpen;
+        
+        // Render ulang panel untuk menerapkan perubahan visibilitas grid
+        renderInputPanel(); 
+
+        // Update tampilan tombol
+        if (state.collapseControlOpen) {
+            button.classList.remove('bg-slate-200', 'text-slate-700');
+            button.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700');
+            button.textContent = 'Tutup Gabung';
+        } else {
+            button.classList.remove('bg-red-600', 'text-white', 'hover:bg-red-700');
+            button.classList.add('bg-slate-200', 'text-slate-700');
+            button.textContent = 'Gabung Kontrol';
+        }
+    }
 
 
     const setupListeners = () => {
@@ -1013,6 +1104,12 @@
         // Listener untuk Tombol Toggle Raw Data (Menggunakan fungsi baru)
         document.getElementById('toggle-raw-data-btn').addEventListener('click', toggleRawDataVisibility);
         
+        // Listener untuk Tombol Toggle Kode
+        document.getElementById('toggle-coding-btn').addEventListener('click', toggleCodingVisibility);
+        
+        // Listener untuk Tombol Toggle Gabung Kontrol
+        document.getElementById('toggle-collapse-ctrl-btn').addEventListener('click', toggleCollapseControlVisibility);
+        
         // Listener untuk Modal
         document.getElementById('confirm-collapse').addEventListener('click', confirmCollapse);
         document.getElementById('cancel-collapse').addEventListener('click', () => {
@@ -1020,9 +1117,9 @@
         });
 
         // Listener untuk Tombol Undo Global
-        const undoContainer = document.getElementById('undo-container'); // Retrieve the container
-        if (undoContainer) { // Check if it exists before adding listener
-            undoContainer.addEventListener('click', (e) => {
+        const undoPlaceholder = document.getElementById('undo-button-placeholder');
+        if (undoPlaceholder) { // Check if it exists before adding listener
+            undoPlaceholder.addEventListener('click', (e) => {
                 if(e.target.id === 'undo-global-btn') {
                     undoLastCollapse();
                 }
@@ -1040,119 +1137,132 @@
 
     const renderInputPanel = () => {
         const catContainer = document.getElementById('category-names-container');
-        const undoContainer = document.getElementById('undo-container');
+        const undoPlaceholder = document.getElementById('undo-button-placeholder');
+        const collapseCtrlBtn = document.getElementById('toggle-collapse-ctrl-btn');
         
         // Cek apakah ada riwayat undo
         const hasHistory = stateHistory.length > 0;
 
-        // --- 1. Render Tombol UNDO Global di Lokasi yang diminta ---
-        // Posisikan tombol UNDO di container statis undo-container
-        if (undoContainer) {
+        // --- 1. Render Tombol UNDO Global di Lokasi Placeholder ---
+        if (undoPlaceholder) {
             if (hasHistory) {
-                undoContainer.innerHTML = `<button type="button" id="undo-global-btn" class="px-3 py-1 text-xs font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600 transition shadow-md" title="Batalkan penggabungan terakhir">UNDO</button>`;
+                undoPlaceholder.innerHTML = `<button type="button" id="undo-global-btn" class="px-3 py-1 text-xs font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600 transition shadow-md" title="Batalkan penggabungan terakhir">UNDO</button>`;
             } else {
-                undoContainer.innerHTML = '';
+                undoPlaceholder.innerHTML = '';
             }
         }
+        
+        // --- 2. Tentukan visibilitas tombol Gabung Kontrol ---
+        // Tombol Gabung Kontrol hanya muncul jika setidaknya ada satu variabel yang > 2 kategori
+        const showCollapseCtrlButton = state.R > 2 || state.C > 2;
+        collapseCtrlBtn.classList.toggle('hidden', !showCollapseCtrlButton);
 
-        // --- 2. Render Header Kategori & Kode ---
+
+        // --- 3. Render Header Kategori & Kode ---
         let catHtml = `<div class="flex justify-between items-center mb-1">
                              <h3 class="text-md font-semibold text-slate-800">Nama Kategori & Kode</h3>
                              <div id="undo-placeholder-header"></div>
                         </div>`; // Judul baru
         
-        // Grid kolom header
-        // Grid baru dengan 6 kolom: Nama X, Kode X, Gabung X, Nama Y, Kode Y, Gabung Y
-        catHtml += `<div class="category-input-grid mb-1">`;
-        // catHtml += `<span class="category-row-label"></span>`; <-- DIHAPUS
+        // Tentukan template grid baru berdasarkan status toggle
+        let gridTemplateColumns = '1fr';
+        
+        // Kolom Nama X (1fr)
+        gridTemplateColumns += ' 1fr'; 
+        
+        // Kolom Kode X (0.5fr)
+        if (state.codingOpen) gridTemplateColumns += ' 0.5fr';
+        
+        // Kolom Gabung X (0.4fr)
+        if (state.collapseControlOpen && state.R > 2) gridTemplateColumns += ' 0.4fr';
+
+        // Kolom Nama Y (1fr)
+        gridTemplateColumns += ' 1fr';
+        
+        // Kolom Kode Y (0.5fr)
+        if (state.codingOpen) gridTemplateColumns += ' 0.5fr';
+
+        // Kolom Gabung Y (0.4fr)
+        if (state.collapseControlOpen && state.C > 2) gridTemplateColumns += ' 0.4fr';
+
+
+        // Terapkan ke Header Grid
+        catHtml += `<div class="category-input-grid mb-1" style="grid-template-columns: ${gridTemplateColumns}">`;
+        
+        // Header Kolom
         catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
-        catHtml += `<span class="category-header-col-3">Kode X</span>`; 
-        catHtml += `<span class="category-header-col-4">Gabung X</span>`; 
+        if (state.codingOpen) catHtml += `<span class="category-header-col-3">Kode X</span>`; 
+        if (state.collapseControlOpen && state.R > 2) catHtml += `<span class="category-header-col-4">Gabung X</span>`; 
         catHtml += `<span class="category-header-col-5">${state.varYName}</span>`;
-        catHtml += `<span class="category-header-col-6">Kode Y</span>`; 
-        catHtml += `<span class="category-header-col-7">Gabung Y</span>`; 
+        if (state.codingOpen) catHtml += `<span class="category-header-col-6">Kode Y</span>`; 
+        if (state.collapseControlOpen && state.C > 2) catHtml += `<span class="category-header-col-7">Gabung Y</span>`; 
+        
         catHtml += `</div>`;
         
         
-        // --- 3. Render Baris Input Kategori ---
-        for (let i = 0; i < state.R; i++) {
-            catHtml += `<div class="category-input-grid">`;
-            // Label Baris (Kategori 1, Kategori 2, dst.) - DIHAPUS
-            // catHtml += `<label class="category-row-label self-center">Kategori ${i+1}</label>`; 
+        // --- 4. Render Baris Input Kategori ---
+        const maxDim = Math.max(state.R, state.C);
+        for (let i = 0; i < maxDim; i++) {
+            // Terapkan ke Baris Input
+            catHtml += `<div class="category-input-grid" style="grid-template-columns: ${gridTemplateColumns}">`;
             
-            // Input Variabel X (Nama Kategori X)
-            catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs"></div>`;
-            
-            // Input Kode X
-            catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs"></div>`;
-            
-            // Tombol Gabung X (Kolom 4)
-            catHtml += `<div class="flex items-center justify-center">`;
-            if (state.R > 2) {
-                catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
+            // Kolom Nama X (hanya jika i < R)
+            if (i < state.R) {
+                catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs"></div>`;
             } else {
-                catHtml += `<span>-</span>`;
+                catHtml += `<div></div>`;
             }
-            catHtml += `</div>`;
+            
+            // Kolom Kode X
+            if (state.codingOpen) {
+                if (i < state.R) {
+                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs"></div>`;
+                } else {
+                     catHtml += `<div></div>`;
+                }
+            }
+            
+            // Kolom Gabung X
+            if (state.collapseControlOpen && state.R > 2) {
+                catHtml += `<div class="flex items-center justify-center">`;
+                if (i < state.R && state.R > 2) {
+                    catHtml += `<button type="button" data-axis="R" data-index="${i}" class="collapse-button bg-red-100 text-red-700 hover:bg-red-200" title="Gabungkan baris ini dengan baris lain">Gabung X</button>`;
+                } else {
+                    catHtml += `<span>-</span>`;
+                }
+                catHtml += `</div>`;
+            }
 
 
-            // Input Variabel Y (Nama Kategori Y) (Kolom 5)
+            // Kolom Nama Y (hanya jika i < C)
             if (i < state.C) {
                 catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center text-xs"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
 
-            // Input Kode Y (Kolom 6)
-            if (i < state.C) {
-                catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs"></div>`;
-            } else {
-                catHtml += `<div></div>`;
-            }
-
-            // Tombol Gabung Y (Kolom 7)
-            catHtml += `<div class="flex items-center justify-center">`;
-            if (state.C > 2 && i < state.C) { 
-                catHtml += `<button type="button" data-axis="C" data-index="${i}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
-            } else {
-                catHtml += `<span>-</span>`;
-            }
-            catHtml += `</div>`;
-
-
-            catHtml += `</div>`;
-        }
-        
-        // Logika tambahan untuk Gabung Y jika C > R (karena kita membatasi loop utama berdasarkan R)
-        if (state.C > state.R) {
-            for (let j = state.R; j < state.C; j++) {
-                catHtml += `<div class="category-input-grid">`;
-                // Label Baris (Kategori R+1, dst.) - DIHAPUS
-                // catHtml += `<label class="category-row-label self-center">Kategori ${j+1}</label>`; 
-                
-                // Input X Kosong, Kode X Kosong, Gabung X Kosong
-                catHtml += `<div></div>`;
-                catHtml += `<div></div>`;
-                catHtml += `<div></div>`; // Kolom Gabung X
-                
-                // Input Variabel Y (Nama Kategori Y)
-                catHtml += `<div><input type="text" id="catY_name_${j}" value="${state.catYNames[j]}" class="label-input-style text-center text-xs"></div>`;
-
-                // Input Kode Y
-                catHtml += `<div><input type="text" id="catY_code_${j}" value="${state.catYCodes[j]}" class="input-style text-center text-xs"></div>`;
-
-                // Kolom Gabungkan Y (Kolom 7)
-                catHtml += `<div class="flex items-center justify-center">`;
-                if (state.C > 2) {
-                     // Tombol gabung Y untuk kategori yang tersisa
-                     catHtml += `<button type="button" data-axis="C" data-index="${j}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
+            // Kolom Kode Y
+            if (state.codingOpen) {
+                if (i < state.C) {
+                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs"></div>`;
                 } else {
-                     catHtml += `<span>-</span>`;
+                    catHtml += `<div></div>`;
+                }
+            }
+
+            // Kolom Gabung Y
+            if (state.collapseControlOpen && state.C > 2) {
+                catHtml += `<div class="flex items-center justify-center">`;
+                if (i < state.C && state.C > 2) { 
+                    catHtml += `<button type="button" data-axis="C" data-index="${i}" class="collapse-button bg-blue-100 text-blue-700 hover:bg-blue-200" title="Gabungkan kolom ini dengan kolom lain">Gabung Y</button>`;
+                } else {
+                    catHtml += `<span>-</span>`;
                 }
                 catHtml += `</div>`;
-
-                catHtml += `</div>`;
             }
+
+
+            catHtml += `</div>`;
         }
         
         catContainer.innerHTML = catHtml;
@@ -1319,7 +1429,7 @@
             // Reset p-value display
             pValueDisplay.textContent = '--';
             // PERUBAHAN: Menggunakan kelas mencolok yang dimodifikasi
-            pValueDisplay.className = 'text-sm font-extrabold px-3 py-1 rounded-full text-slate-500 bg-slate-100 shadow';
+            pValueDisplay.className = 'text-sm font-extrabold px-3 py-1 rounded-full text-slate-500 bg-slate-100 shadow-md';
 
 
             // Pastikan tombol di Panel Input kembali ke status 'Tampilkan' dan di-highlight hijau solid
@@ -1377,7 +1487,7 @@
         
         let conclusion;
         
-        // --- LOGIKA P-VALUE DISPLAY MENCILOK (DIPERBARUI SESUAI PERMINTAAN) ---
+        // --- LOGIKA P-VALUE DISPLAY MENCILOK ---
         // Kelas dasar yang dimodifikasi
         pValueDisplay.className = 'text-sm font-extrabold px-3 py-1 rounded-full shadow-md'; 
 
@@ -1387,7 +1497,7 @@
             pValueDisplay.classList.add('bg-slate-400', 'text-slate-800');
             pValueDisplay.textContent = 'NILAI P: Invalid';
         } else {
-            // Logika baru: Merah jika p > 0.05 (Tidak Signifikan), Hijau jika p < 0.05 (Signifikan)
+            // Logika: Merah jika p > 0.05 (Tidak Signifikan), Hijau jika p < 0.05 (Signifikan)
             if (p < ALPHA) {
                 // Signifikan (Tolak Ho) -> HIJAU
                 conclusion = `Sehingga signifikan, jadi Ho ditolak dan Ha diterima, yang berarti ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
@@ -1419,12 +1529,20 @@
         const body = document.getElementById('crosstab-body');
         if (!stats || stats.N === 0) { head.innerHTML = ''; body.innerHTML = ''; return; }
 
-        let headHtml = `<tr class="bg-slate-50"><th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th><th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th><th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varYName}</th><th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th></tr><tr class="bg-slate-50">`;
+        let headHtml = `<tr class="bg-slate-50"><th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th><th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th><th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">`; // Hapus uppercase tracking-wider dari sini
+        // Menggunakan nama kategori Y tanpa UPPERCASE
+        state.catYNames.forEach(name => {
+            headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500">${name}</th>`; // Hapus uppercase tracking-wider
+        });
+        headHtml += `<th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th></tr><tr class="bg-slate-50">`;
+        
+        // Baris kedua head (kolom kategori Y)
         state.catYNames.forEach(name => {
             headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">${name}</th>`;
         });
         headHtml += `</tr>`;
         head.innerHTML = headHtml;
+
 
         let bodyHtml = '';
         for (let i = 0; i < state.R; i++) {
@@ -1543,6 +1661,20 @@
             rawDataButton.classList.remove('bg-slate-200', 'text-slate-700');
             rawDataButton.classList.add('bg-green-600', 'text-white');
             rawDataButton.textContent = 'Data Mentah';
+        }
+        
+        // Inisialisasi tampilan tombol Kode dan Gabung Kontrol
+        const codingBtn = document.getElementById('toggle-coding-btn');
+        if (codingBtn) {
+            // Default: Kode Tertutup (warna netral)
+            codingBtn.classList.add('bg-slate-200', 'text-slate-700');
+            codingBtn.textContent = 'Kode';
+        }
+        const collapseCtrlBtn = document.getElementById('toggle-collapse-ctrl-btn');
+        if (collapseCtrlBtn) {
+            // Default: Gabung Kontrol Tertutup (warna netral)
+            collapseCtrlBtn.classList.add('bg-slate-200', 'text-slate-700');
+            collapseCtrlBtn.textContent = 'Gabung Kontrol';
         }
     });
     </script>
