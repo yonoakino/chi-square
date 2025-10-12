@@ -7,9 +7,9 @@
     <!-- Chosen Palette: Calm Neutrals & Sage -->
     <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci dan Interpretasi, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi). Perubahan terbaru memprioritiskan penyajian output statistik formal dan interpretasi tekstual secara langsung. -->
     <!-- Visualization & Content Choices: 
-        - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Cara paling intuitif untuk input data tabular. -> Metode: Vanilla JS.
+        - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Memberikan umpan balik langsung. -> Metode: Vanilla JS.
         - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
-        - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS), memberikan kredibilitas dan detail yang diperlukan oleh para ahli. -> Metode: Vanilla JS.
+        - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS). -> Metode: Vanilla JS.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -54,7 +54,8 @@
         }
         /* MENGHILANGKAN LABEL VARIABEL X/Y. Ganti 1fr 2fr 1.5fr menjadi 0.5fr 2fr 1.5fr */
         .variable-input-grid.var-input {
-            grid-template-columns: 2fr 1.5fr; /* Hanya Nama dan Jumlah Kategori */
+            /* PERBAIKAN: 3fr untuk Nama Variabel (agar responsif) dan 1.5fr untuk Jml Kategori */
+            grid-template-columns: 3fr 1.5fr; 
         }
 
 
@@ -169,6 +170,12 @@
         
         /* Kelas baru untuk menyembunyikan kolom (karena display:none pada grid item bisa sulit) */
         .hidden-col { display: none; }
+        
+        /* Gaya untuk tombol floating yang dinonaktifkan */
+        .floating-btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
     </style>
 </head>
@@ -179,18 +186,19 @@
 
         <header class="text-center mb-6 px-4"> <!-- Tambahkan px-4 untuk header -->
             <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">UJI CHI-SQUARE</h1> <!-- JUDUL DIPERBARUI & UKURAN 4xl -->
-            <!-- SUB-JUDUL DIHAPUS -->
+            
+            <!-- INFORMASI CREATOR & AKTIVASI PRO (SEKARANG DISIMPAN DI SINI TAPI KOSONG) -->
+            <!-- MENGHILANGKAN LABEL CREATED BY YONO & TOMBOL WHATSAPP/AKTIVASI -->
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> <!-- Tambahkan px-4 untuk main content -->
 
-            <!-- KOLOM KIRI (BARIS 2 & 3 - Crosstab & Hasil Rinci) -->
+            <!-- KOLOM KIRI (HASIL - SEMBUNYI DEFAULT) -->
             <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> <!-- Kurangi space-y -->
                 
                 <section id="crosstab-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
                     <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
                         <h3 class="text-xl font-bold text-slate-900">2. Crosstab</h3> <!-- LABEL DIUBAH -->
-                        <!-- TOMBOL TOGGLE ASLI DIHAPUS, DIPINDAHKAN KE PANEL INPUT -->
                     </div>
                     <!-- Konten Tabel Crosstabulation -->
                     <div id="crosstab-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
@@ -208,7 +216,6 @@
                 <section id="detailed-tests-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
                     <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
                         <h3 class="text-xl font-bold text-slate-900">3. Hasil</h3> <!-- LABEL DIUBAH -->
-                        <!-- TOMBOL TOGGLE ASLI DIHAPUS, DIPINDAHKAN KE PANEL INPUT -->
                     </div>
                     <div id="detailed-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
                         <div class="card overflow-hidden">
@@ -242,11 +249,10 @@
                 </section>
             </div>
 
-            <!-- KOLOM KANAN (INPUT - BARIS 1) -->
-            <aside class="lg:col-span-1 order-1 lg:order-1">
+            <!-- KOLOM KANAN (INPUT - SELALU TERLIHAT) -->
+            <aside id="input-panel-container" class="lg:col-span-1 order-1 lg:order-1">
                 <div class="card p-3 sticky top-8"> <!-- MENGURANGI PADDING CARD: p-4 -> p-3 -->
                     <h2 class="text-xl font-bold text-slate-900 mb-1">1. Input Data</h2> <!-- LABEL DIUBAH -->
-                    <!-- DESKRIPSI DIHAPUS -->
                     
                     <div class="space-y-2"> <!-- MENGURANGI SPACE VERTICAL: space-y-3 -> space-y-2 -->
                         <!-- Header Input Variabel -->
@@ -259,15 +265,15 @@
                         <!-- Variabel X Row -->
                         <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
                             <!-- LABEL DIHAPUS -->
-                            <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center text-xs" oninput="handleInputChange(event)">
-                            <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)">
+                            <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" title="Nama Variabel X (Baris)">
+                            <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel X (min 2, max 10)">
                         </div>
                         
                         <!-- Variabel Y Row -->
                         <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
                             <!-- LABEL DIHAPUS -->
-                            <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center text-xs" oninput="handleInputChange(event)">
-                            <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)">
+                            <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" title="Nama Variabel Y (Kolom)">
+                            <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel Y (min 2, max 10)">
                         </div>
                         
                         <!-- Tombol Undo dipindahkan ke sini, tetapi diurus di renderInputPanel -->
@@ -285,7 +291,7 @@
                             <!-- TOMBOL KODE -->
                             <button id="toggle-coding-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm" title="Tampilkan/Sembunyikan Kode X dan Kode Y">Kode</button>
                             <!-- TOMBOL GABUNG KONTROL -->
-                            <button id="toggle-collapse-ctrl-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm hidden" title="Tampilkan/Sembunyikan Tombol Gabung Kategori">Gabung</button>
+                            <button id="toggle-collapse-ctrl-btn" class="px-2 py-1 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 transition shadow-sm hidden" title="Tampilkan/Sembunyikan Tombol Gabung Kategori">Gabung Kontrol</button>
                         </div>
                     </div>
 
@@ -317,10 +323,6 @@
                         <p class="text-xs text-slate-500 mb-1">Kolom menunjukkan Kode X dan Kode Y yang diacak.</p> <!-- MENGURANGI MARGIN BOTTOM -->
                         <div id="raw-data-table-content"></div>
                     </div>
-
-                    <!-- PEMISAH BARU DAN KONTROL LAMA DIHAPUS DARI SINI -->
-                    <!-- <hr class="my-4"> -->
-                    <!-- <div class="flex flex-wrap gap-2 justify-between"> ... </div> -->
 
                 </div>
             </aside>
@@ -394,8 +396,8 @@
         ],
         crosstabOpen: false,
         detailedOpen: false,
-        codingOpen: false, // NEW: Kontrol visibilitas Kode X/Y
-        collapseControlOpen: false // NEW: Kontrol visibilitas tombol Gabung Kontrol
+        codingOpen: false, // Kontrol visibilitas Kode X/Y
+        collapseControlOpen: false // Kontrol visibilitas tombol Gabung Kontrol
     };
 
 
@@ -1068,12 +1070,12 @@
 
         // Update tampilan tombol
         if (state.codingOpen) {
-            button.classList.remove('bg-slate-200', 'text-slate-700');
-            button.classList.add('bg-green-600', 'text-white');
+            button.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300'); // Hapus warna netral
+            button.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700'); // Tambahkan warna aktif (Hijau)
             button.textContent = 'Tutup Kode';
         } else {
-            button.classList.remove('bg-green-600', 'text-white');
-            button.classList.add('bg-slate-200', 'text-slate-700');
+            button.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700'); // Hapus warna aktif
+            button.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300'); // Tambahkan warna netral
             button.textContent = 'Kode';
         }
     }
@@ -1088,7 +1090,7 @@
 
         // Update tampilan tombol
         if (state.collapseControlOpen) {
-            button.classList.remove('bg-slate-200', 'text-slate-700');
+            button.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
             button.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700');
             button.textContent = 'Tutup Gabung';
         } else {
@@ -1143,27 +1145,41 @@
         const catContainer = document.getElementById('category-names-container');
         const undoBtn = document.getElementById('undo-global-btn');
         const collapseCtrlBtn = document.getElementById('toggle-collapse-ctrl-btn');
+        const codingBtn = document.getElementById('toggle-coding-btn'); // Ambil referensi coding button
+
         
         // Cek apakah ada riwayat undo
         const hasHistory = stateHistory.length > 0;
         
-        // --- 1. Kelola Tombol UNDO (Status Aktif/Disabled) ---
+        // --- 1. Kelola Tombol UNDO (Status Aktif/Disabled dan Style) ---
         undoBtn.disabled = !hasHistory;
+        undoBtn.classList.remove('bg-yellow-500', 'text-white', 'hover:bg-yellow-600', 'bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+
         if (hasHistory) {
-            undoBtn.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+            // Aktif (Kuning)
             undoBtn.classList.add('bg-yellow-500', 'text-white', 'hover:bg-yellow-600');
         } else {
-            undoBtn.classList.remove('bg-yellow-500', 'text-white', 'hover:bg-yellow-600');
+            // Disabled (Netral, sama seperti tombol Kode/Gabung saat off)
             undoBtn.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
         }
+
+        // --- 2. Kelola Style Tombol Kode dan Gabung Kontrol (di luar state change) ---
+        codingBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700', 'bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+        codingBtn.classList.add(state.codingOpen ? 'bg-green-600' : 'bg-slate-200', state.codingOpen ? 'text-white' : 'text-slate-700');
+        codingBtn.classList.add(state.codingOpen ? 'hover:bg-green-700' : 'hover:bg-slate-300');
+        codingBtn.textContent = state.codingOpen ? 'Tutup Kode' : 'Kode';
         
-        // --- 2. Tentukan visibilitas tombol Gabung Kontrol ---
+        collapseCtrlBtn.classList.remove('bg-red-600', 'text-white', 'hover:bg-red-700', 'bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+        collapseCtrlBtn.classList.add(state.collapseControlOpen ? 'bg-red-600' : 'bg-slate-200', state.collapseControlOpen ? 'text-white' : 'text-slate-700');
+        collapseCtrlBtn.classList.add(state.collapseControlOpen ? 'hover:bg-red-700' : 'hover:bg-slate-300');
+        collapseCtrlBtn.textContent = state.collapseControlOpen ? 'Tutup Gabung' : 'Gabung Kontrol';
+
+        
+        // --- 3. Tentukan visibilitas tombol Gabung Kontrol ---
         const showCollapseCtrlButton = state.R > 2 || state.C > 2;
         collapseCtrlBtn.classList.toggle('hidden', !showCollapseCtrlButton);
         
-        // --- 3. Render Header Kategori & Kontrol Toggle di sampingnya (SUDAH DI TINGKAT HTML) ---
-        
-        // Tentukan template grid baru berdasarkan status toggle
+        // --- 4. Tentukan template grid baru berdasarkan status toggle ---
         let gridTemplateColumns = '1fr';
         
         // Kolom Nama X (1fr)
@@ -1200,7 +1216,7 @@
         catHtml += `</div>`;
         
         
-        // --- 4. Render Baris Input Kategori ---
+        // --- 5. Render Baris Input Kategori ---
         const maxDim = Math.max(state.R, state.C);
         for (let i = 0; i < maxDim; i++) {
             // Terapkan ke Baris Input
@@ -1208,7 +1224,7 @@
             
             // Kolom Nama X (hanya jika i < R)
             if (i < state.R) {
-                catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs"></div>`;
+                catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs" title="Nama kategori ${state.varXName} ke-${i+1}"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
@@ -1216,7 +1232,7 @@
             // Kolom Kode X
             if (state.codingOpen) {
                 if (i < state.R) {
-                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs"></div>`;
+                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${state.varXNames[i]}"></div>`;
                 } else {
                      catHtml += `<div></div>`;
                 }
@@ -1236,7 +1252,7 @@
 
             // Kolom Nama Y (hanya jika i < C)
             if (i < state.C) {
-                catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center text-xs"></div>`;
+                catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center text-xs" title="Nama kategori ${state.varYName} ke-${i+1}"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
@@ -1244,7 +1260,7 @@
             // Kolom Kode Y
             if (state.codingOpen) {
                 if (i < state.C) {
-                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs"></div>`;
+                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${state.catYNames[i]}"></div>`;
                 } else {
                     catHtml += `<div></div>`;
                 }
@@ -1529,16 +1545,16 @@
         const body = document.getElementById('crosstab-body');
         if (!stats || stats.N === 0) { head.innerHTML = ''; body.innerHTML = ''; return; }
 
-        let headHtml = `<tr class="bg-slate-50"><th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th><th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th><th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">`; // Hapus uppercase tracking-wider dari sini
-        // Menggunakan nama kategori Y tanpa UPPERCASE
-        state.catYNames.forEach(name => {
-            headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500">${name}</th>`; // Hapus uppercase tracking-wider
-        });
-        headHtml += `<th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th></tr><tr class="bg-slate-50">`;
-        
+        let headHtml = `<tr class="bg-slate-50">
+                            <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th>
+                            <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th>
+                            <th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">${state.varYName}</th>
+                            <th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
+                        </tr>
+                        <tr class="bg-slate-50">`;
         // Baris kedua head (kolom kategori Y)
         state.catYNames.forEach(name => {
-            headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">${name}</th>`;
+            headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500">${name}</th>`;
         });
         headHtml += `</tr>`;
         head.innerHTML = headHtml;
