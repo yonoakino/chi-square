@@ -138,7 +138,7 @@
 
         <header class="text-center mb-6 px-4"> <!-- Tambahkan px-4 untuk header -->
             <h1 class="4xl font-extrabold text-slate-900 tracking-tight">Dasbor Analisis Chi-Square Interaktif</h1>
-            <p class="mt-1 text-base text-slate-600">Analisis hubungan antara variabel kategoris secara real-time.</p>
+            /* <p class="mt-1 text-base text-slate-600">Analisis hubungan antara variabel kategoris secara real-time.</p>*/
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> <!-- Tambahkan px-4 untuk main content -->
@@ -205,7 +205,7 @@
             <aside class="lg:col-span-1 order-1 lg:order-1">
                 <div class="card p-3 sticky top-8"> <!-- MENGURANGI PADDING CARD: p-4 -> p-3 -->
                     <h2 class="text-xl font-bold text-slate-900 mb-1">1. Panel Input Data</h2>
-                    <p class="text-xs text-slate-500 mb-3">Ubah nilai frekuensi atau nama kategori di bawah ini untuk melihat semua hasil diperbarui secara otomatis.</p> <!-- MENGURANGI MARGIN BOTTOM: mb-4 -> mb-3 -->
+                   /* <p class="text-xs text-slate-500 mb-3">Ubah nilai frekuensi atau nama kategori di bawah ini untuk melihat semua hasil diperbarui secara otomatis.</p> */<!-- MENGURANGI MARGIN BOTTOM: mb-4 -> mb-3 -->
                     
                     <div class="space-y-2"> <!-- MENGURANGI SPACE VERTICAL: space-y-3 -> space-y-2 -->
                         <!-- Header Input Variabel -->
@@ -247,6 +247,8 @@
                     <!-- KONTROL TABEL FREKUENSI -->
                     <div class="flex justify-between items-center mb-1"> <!-- MENGURANGI MARGIN BOTTOM: mb-2 -> mb-1 -->
                         <h3 class="text-base font-semibold text-slate-800">Tabel Frekuensi Observasi</h3>
+                        <!-- Elemen baru untuk menampilkan p-value -->
+                        <span id="p-value-display" class="text-xs font-bold px-2 py-0.5 rounded-full">--</span>
                         <!-- Hapus tombol Salin dan Data Mentah di sini -->
                     </div>
                     
@@ -955,6 +957,9 @@
         // Toggle state internal
         state[`${stateKey}Open`] = !state[`${stateKey}Open`];
         const isOpen = state[`${stateKey}Open`];
+        
+        // Nama asli tombol
+        const originalName = stateKey === 'crosstab' ? 'Crosstab' : 'Hasil';
 
         // Apply changes to DOM
         content.classList.toggle('hidden', !isOpen);
@@ -965,6 +970,9 @@
         button.classList.toggle('bg-slate-200', isOpen);
         button.classList.toggle('text-white', !isOpen);
         button.classList.toggle('text-slate-700', isOpen);
+        
+        // Update button text
+        button.textContent = isOpen ? 'Tutup' : originalName;
     }
     
     // FUNGSI BARU: Logika Toggle untuk Raw Data (Sekarang terpisah dari toggleResultsVisibility)
@@ -1300,19 +1308,30 @@
         // Tombol toggle (Sekarang ada di Panel Input)
         const toggleCrosstabBtn = document.getElementById('toggle-crosstab-btn');
         const toggleDetailedBtn = document.getElementById('toggle-detailed-btn');
-
+        
+        // Elemen p-value baru
+        const pValueDisplay = document.getElementById('p-value-display');
+        
         if (!stats || stats.N === 0) {
             // Sembunyikan semua section hasil jika N=0
             sections.forEach(sec => sec.classList.add('hidden'));
             
+            // Reset p-value display
+            pValueDisplay.textContent = '--';
+            // PERUBAHAN: Menggunakan kelas mencolok yang dimodifikasi
+            pValueDisplay.className = 'text-sm font-extrabold px-3 py-1 rounded-full text-slate-500 bg-slate-100 shadow';
+
+
             // Pastikan tombol di Panel Input kembali ke status 'Tampilkan' dan di-highlight hijau solid
             if (toggleCrosstabBtn) {
                 toggleCrosstabBtn.classList.remove('bg-slate-200', 'text-slate-700');
                 toggleCrosstabBtn.classList.add('bg-green-600', 'text-white');
+                toggleCrosstabBtn.textContent = 'Crosstab';
             }
             if (toggleDetailedBtn) {
                 toggleDetailedBtn.classList.remove('bg-slate-200', 'text-slate-700');
                 toggleDetailedBtn.classList.add('bg-green-600', 'text-white');
+                toggleDetailedBtn.textContent = 'Hasil';
             }
 
             // Pastikan konten hasil tersembunyi
@@ -1334,12 +1353,14 @@
         toggleCrosstabBtn.classList.toggle('text-slate-700', state.crosstabOpen);
         toggleCrosstabBtn.classList.toggle('bg-green-600', !state.crosstabOpen);
         toggleCrosstabBtn.classList.toggle('text-white', !state.crosstabOpen);
+        toggleCrosstabBtn.textContent = state.crosstabOpen ? 'Tutup' : 'Crosstab'; // PERUBAHAN TEKS
 
         // Logika warna untuk tombol Detailed
         toggleDetailedBtn.classList.toggle('bg-slate-200', state.detailedOpen);
         toggleDetailedBtn.classList.toggle('text-slate-700', state.detailedOpen);
         toggleDetailedBtn.classList.toggle('bg-green-600', !state.detailedOpen);
         toggleDetailedBtn.classList.toggle('text-white', !state.detailedOpen);
+        toggleDetailedBtn.textContent = state.detailedOpen ? 'Tutup' : 'Hasil'; // PERUBAHAN TEKS
 
 
         const chiSquareValue = stats.chiSquare.toFixed(3);
@@ -1356,20 +1377,29 @@
         
         let conclusion;
         
+        // --- LOGIKA P-VALUE DISPLAY MENCILOK (DIPERBARUI SESUAI PERMINTAAN) ---
+        // Kelas dasar yang dimodifikasi
+        pValueDisplay.className = 'text-sm font-extrabold px-3 py-1 rounded-full shadow-md'; 
 
         if (stats.df === 0 || isNaN(p)) {
             conclusion = `Derajat kebebasan (df) adalah 0 atau terjadi kesalahan perhitungan. Interpretasi hubungan tidak dapat dilakukan.`;
             addClasses = ['bg-slate-100', 'border-slate-400'];
+            pValueDisplay.classList.add('bg-slate-400', 'text-slate-800');
+            pValueDisplay.textContent = 'NILAI P: Invalid';
         } else {
+            // Logika baru: Hijau jika p < 0.05 (Signifikan), Merah jika p > 0.05 (Tidak Signifikan)
             if (p < ALPHA) {
-                // p < 0.05 (Signifikan)
+                // Signifikan (Tolak Ho) -> HIJAU
                 conclusion = `Sehingga signifikan, jadi Ho ditolak dan Ha diterima, yang berarti ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
-                addClasses = ['bg-red-50', 'border-red-500'];
+                addClasses = ['bg-red-50', 'border-red-500']; // Kelas interpretasi tetap merah untuk Tolak Ho
+                pValueDisplay.classList.add('bg-green-600', 'text-white'); // Warna PILIHAN USER (Hijau)
             } else {
-                // p >= 0.05 (Tidak Signifikan)
+                // Tidak Signifikan (Terima Ho) -> MERAH
                 conclusion = `Sehingga tidak signifikan, jadi Ho diterima dan Ha ditolak, yang berarti tidak ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
-                addClasses = ['bg-green-50', 'border-green-500'];
+                addClasses = ['bg-green-50', 'border-green-500']; // Kelas interpretasi tetap hijau untuk Terima Ho
+                pValueDisplay.classList.add('bg-red-500', 'text-white'); // Warna PILIHAN USER (Merah)
             }
+            pValueDisplay.textContent = `NILAI P: ${pValueFormatted}`;
         }
         
         // Hapus kelas lama
