@@ -4,14 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UJI CHI-SQUARE</title>
-    <!-- Chosen Palette: Calm Neutrals & Sage -->
-    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur dasbor interaktif yang berpusat pada tugas pengguna. Tujuannya adalah mengubah laporan data statis menjadi alat eksplorasi dinamis. Arsitekturnya disusun ulang menjadi Alur Kerja (Workflow): 1) Panel Input (ditempatkan di kolom utama, paling atas), 2) Tabel Crosstabulation, 3) Hasil Rinci dan Interpretasi, dan 4) Dasbor Hasil Utama (Metrik & Visualisasi). Perubahan terbaru memprioritiskan penyajian output statistik formal dan interpretasi tekstual secara langsung. -->
-    <!-- Visualization & Content Choices: 
-        - Laporan Info: Tabel Kontingensi 2x2. -> Goal: Memungkinkan input data. -> Viz/Metode: Tabel HTML dengan elemen input. -> Interaksi: Pembaruan real-time saat mengetik. -> Justifikasi: Memberikan umpan balik langsung. -> Metode: Vanilla JS.
-        - Laporan Info: Hasil statistik (Nilai Chi-Square, p-value, df). -> Goal: Menyajikan ringkasan hasil utama. -> Viz/Metode: Kartu metrik (Metric Cards). -> Interaksi: Nilai diperbarui secara instan. -> Justifikasi: Memberikan gambaran umum hasil terpenting dengan cepat. -> Metode: HTML/Tailwind + JS.
-        - Laporan Info: Output statistik lengkap. -> Goal: Menyediakan data statistik formal dan rinci. -> Viz/Metode: Tabel HTML terstruktur. -> Interaksi: Tabel diperbarui secara dinamis, baris tertentu (misalnya, Uji Fisher) muncul secara kondisional. -> Justifikasi: Meniru format output perangkat lunak statistik standar (seperti SPSS). -> Metode: Vanilla JS.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,25 +13,9 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); border: 1px solid #e5e7eb; }
-        /* Chart Container Responsiveness */
-        .chart-container { 
-            position: relative; 
-            width: 100%; 
-            height: 40vh; /* Tinggi relatif untuk layar kecil */
-            max-height: 450px; 
-            margin-left: auto; 
-            margin-right: auto; 
-        }
-        @media (min-width: 1024px) {
-            .chart-container {
-                height: 24rem; /* Tinggi tetap untuk desktop */
-            }
-        }
-
-        .metric-value { color: #15803d; }
-        .input-style { width: 100%; text-align: right; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.3rem; /* Padding lebih kecil */ transition: border-color 0.2s; }
+        .input-style { width: 100%; text-align: right; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.3rem; transition: border-color 0.2s; }
         .input-style:focus { border-color: #16a34a; outline: none; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2); }
-        .label-input-style { width: 100%; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.3rem; /* Padding lebih kecil */ }
+        .label-input-style { width: 100%; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.3rem; }
         .nav-button { transition: all 0.2s; }
         .nav-button.active { background-color: #16a34a; color: white; }
         .nav-button:not(.active):hover { background-color: #f0fdf4; }
@@ -144,34 +120,16 @@
             cursor: default;
         }
         
-        h2 { font-size: 1.5rem; } /* H2 sedikit dikurangi dari 2xl */
-        h3 { font-size: 1.1rem; } /* H3 sedikit dikurangi dari xl */
+        h2 { font-size: 1.5rem; } 
+        h3 { font-size: 1.1rem; } 
 
-        .metric-value { font-size: 2rem; } /* Nilai metrik juga dikurangi */
-
-        /* Raw Data Table */
         .raw-data-table { font-size: 0.75rem; }
         .raw-data-table th, .raw-data-table td {
             padding: 0.2rem 0.4rem;
         }
         
-        /* Accordion Style */
-        /* Hapus style accordion lama atau re-implementasi sebagai toggler */
-        .toggler-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            background-color: #f3f4f6; /* slate-100 */
-            border-radius: 0.5rem;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 0.5rem; /* Tambahkan sedikit margin bawah untuk pemisahan */
-        }
-        
-        /* Kelas baru untuk menyembunyikan kolom (karena display:none pada grid item bisa sulit) */
         .hidden-col { display: none; }
         
-        /* Gaya untuk tombol floating yang dinonaktifkan */
         .floating-btn-disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -182,26 +140,27 @@
 
 <body class="text-slate-800">
 
-    <div class="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-0"> <!-- Ganti p-4 sm:p-6 lg:p-8 menjadi py-4 px-0 -->
+    <div class="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-0"> 
 
-        <header class="text-center mb-6 px-4"> <!-- Tambahkan px-4 untuk header -->
-            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">UJI CHI-SQUARE</h1> <!-- JUDUL DIPERBARUI & UKURAN 4xl -->
+        <header class="text-center mb-6 px-4"> 
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">UJI CHI-SQUARE</h1> 
             
-            <!-- INFORMASI CREATOR & AKTIVASI PRO (SEKARANG DISIMPAN DI SINI TAPI KOSONG) -->
-            <!-- MENGHILANGKAN LABEL CREATED BY YONO & TOMBOL WHATSAPP/AKTIVASI -->
+            <div class="mt-2 flex flex-col justify-center items-center gap-2 text-sm">
+                <!-- ELEMEN CREATOR DAN WHATSAPP DIHAPUS SEPENUHNYA DARI SINI -->
+            </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> <!-- Tambahkan px-4 untuk main content -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> 
 
             <!-- KOLOM KIRI (HASIL - SEMBUNYI DEFAULT) -->
-            <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> <!-- Kurangi space-y -->
+            <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> 
                 
-                <section id="crosstab-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
-                    <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
-                        <h3 class="text-xl font-bold text-slate-900">2. Crosstab</h3> <!-- LABEL DIUBAH -->
+                <section id="crosstab-section" class="hidden card p-4"> 
+                    <div class="flex justify-between items-center mb-2"> 
+                        <h3 class="text-xl font-bold text-slate-900">2. Crosstab</h3> 
                     </div>
                     <!-- Konten Tabel Crosstabulation -->
-                    <div id="crosstab-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
+                    <div id="crosstab-content" class="block hidden"> 
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead id="crosstab-head"></thead>
@@ -213,11 +172,11 @@
                     </div>
                 </section>
                 
-                <section id="detailed-tests-section" class="hidden card p-4"> <!-- Hapus p-0 dan ganti ke p-4 card -->
-                    <div class="flex justify-between items-center mb-2"> <!-- Gantikan accordion-header dengan flex biasa -->
-                        <h3 class="text-xl font-bold text-slate-900">3. Hasil</h3> <!-- LABEL DIUBAH -->
+                <section id="detailed-tests-section" class="hidden card p-4"> 
+                    <div class="flex justify-between items-center mb-2"> 
+                        <h3 class="text-xl font-bold text-slate-900">3. Hasil</h3> 
                     </div>
-                    <div id="detailed-content" class="block hidden"> <!-- TAMBAHKAN KELAS HIDDEN SECARA DEFAULT DI SINI -->
+                    <div id="detailed-content" class="block hidden"> 
                         <div class="card overflow-hidden">
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
@@ -276,8 +235,6 @@
                             <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel Y (min 2, max 10)">
                         </div>
                         
-                        <!-- Tombol Undo dipindahkan ke sini, tetapi diurus di renderInputPanel -->
-                        <!-- <div id="undo-button-container" class="pt-4"> ... </div> -->
                     </div>
                     
                     <hr class="my-3"> <!-- MENGURANGI MARGIN GARIS HORIZONTAL: my-4 -> my-3 -->
@@ -297,8 +254,6 @@
 
                     <!-- Kontainer Statis untuk Tombol UNDO (DIKOSONGKAN KARENA BUTTON UNDO DIPINDAH KE ATAS) -->
                     <div id="undo-container" class="mb-2 flex justify-end items-center"> <!-- UBAH KE JUSTIFY-END -->
-                        <!-- Tombol Kode dan Gabung sudah dipindahkan ke atas -->
-                        <!-- <div id="undo-button-placeholder"></div> --> <!-- Tempat untuk tombol UNDO (DIPINDAH) -->
                     </div> <!-- MENGURANGI MARGIN BOTTOM: mb-3 -> mb-2 -->
                     
                     <div id="category-names-container" class="space-y-0.5"></div> <!-- MENGURANGI SPACE VERTICAL: space-y-1 -> space-y-0.5 -->
@@ -789,7 +744,7 @@
             freqHtml += `<tr class="border-t border-slate-200"><td class="font-medium text-slate-600 py-2 pr-2">${state.catXNames[i]}</td>`;
             for (let j = 0; j < state.C; j++) {
                 // Input Frekuensi (mempertahankan value lama)
-                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${state.frequencies[i][j]}" min="0" class="input-style text-xs"></td>`;
+                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${state.frequencies[i][j]}" min="0" class="input-style text-xs" title="Frekuensi Observasi Baris ${state.catXNames[i]} Kolom ${state.catYNames[j]}"></td>`;
             }
             freqHtml += `</tr>`;
         }
@@ -1223,8 +1178,14 @@
             catHtml += `<div class="category-input-grid" style="grid-template-columns: ${gridTemplateColumns}">`;
             
             // Kolom Nama X (hanya jika i < R)
+            // Menggunakan optional chaining untuk menghindari error undefined index saat pertama kali load
+            const catXName = state.catXNames[i] || "";
+            const catYName = state.catYNames[i] || "";
+            const catXCode = state.catXCodes[i] || "";
+            const catYCode = state.catYCodes[i] || "";
+
             if (i < state.R) {
-                catHtml += `<div><input type="text" id="catX_name_${i}" value="${state.catXNames[i]}" class="label-input-style text-center text-xs" title="Nama kategori ${state.varXName} ke-${i+1}"></div>`;
+                catHtml += `<div><input type="text" id="catX_name_${i}" value="${catXName}" class="label-input-style text-center text-xs" title="Nama kategori ${catXName} ke-${i+1}"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
@@ -1232,7 +1193,7 @@
             // Kolom Kode X
             if (state.codingOpen) {
                 if (i < state.R) {
-                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${state.catXCodes[i]}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${state.varXNames[i]}"></div>`;
+                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${catXCode}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${catXName}"></div>`;
                 } else {
                      catHtml += `<div></div>`;
                 }
@@ -1252,7 +1213,7 @@
 
             // Kolom Nama Y (hanya jika i < C)
             if (i < state.C) {
-                catHtml += `<div><input type="text" id="catY_name_${i}" value="${state.catYNames[i]}" class="label-input-style text-center text-xs" title="Nama kategori ${state.varYName} ke-${i+1}"></div>`;
+                catHtml += `<div><input type="text" id="catY_name_${i}" value="${catYName}" class="label-input-style text-center text-xs" title="Nama kategori ${state.varYName} ke-${i+1}"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
@@ -1260,7 +1221,7 @@
             // Kolom Kode Y
             if (state.codingOpen) {
                 if (i < state.C) {
-                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${state.catYCodes[i]}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${state.catYNames[i]}"></div>`;
+                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${catYCode}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${catYName}"></div>`;
                 } else {
                     catHtml += `<div></div>`;
                 }
