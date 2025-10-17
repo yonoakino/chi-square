@@ -41,8 +41,7 @@
         /* Layout Nama Kategori (Grid DENSITAS TINGGI: 1 Label + 2 Input + 2 Kode + 1 Gabung) */
         .category-input-grid { 
             display: grid; 
-            /* Grid Lama: 0.5fr 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr */
-            /* Grid Baru (Menghilangkan label pertama): 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr */
+            /* Grid Lama: 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr */
             grid-template-columns: 1fr 0.5fr 0.4fr 1fr 0.5fr 0.4fr; 
             gap: 0.2rem; /* Kurangi gap */
             align-items: center; 
@@ -151,7 +150,7 @@
             </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> 
+            <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4"> 
 
             <!-- KOLOM KIRI (HASIL - SEMBUNYI DEFAULT) -->
             <div class="lg:col-span-2 space-y-6 order-2 lg:order-2"> 
@@ -225,15 +224,17 @@
                         <!-- Variabel X Row -->
                         <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
                             <!-- LABEL DIHAPUS -->
-                            <input type="text" id="varX_name" value="Variabel X" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" title="Nama Variabel X (Baris)">
-                            <input type="number" id="num_categories_x" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel X (min 2, max 10)">
+                            <!-- Nilai awal dihapus dan diganti placeholder -->
+                            <input type="text" id="varX_name" value="" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" title="Nama Variabel X (Baris)" placeholder="Contoh: Gender">
+                            <input type="number" id="num_categories_x" value="" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel X (min 2, max 10)" placeholder="2">
                         </div>
                         
                         <!-- Variabel Y Row -->
                         <div class="variable-input-grid var-input"> <!-- MENGGUNAKAN KELAS BARU -->
                             <!-- LABEL DIHAPUS -->
-                            <input type="text" id="varY_name" value="Variabel Y" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" title="Nama Variabel Y (Kolom)">
-                            <input type="number" id="num_categories_y" value="2" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel Y (min 2, max 10)">
+                            <!-- Nilai awal dihapus dan diganti placeholder -->
+                            <input type="text" id="varY_name" value="" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" title="Nama Variabel Y (Kolom)" placeholder="Contoh: Pekerjaan">
+                            <input type="number" id="num_categories_y" value="" min="2" max="10" class="label-input-style text-center text-xs" onchange="handleDimensionChange(event)" title="Jumlah kategori untuk Variabel Y (min 2, max 10)" placeholder="2">
                         </div>
                         
                     </div>
@@ -310,7 +311,7 @@
         <button id="copy-raw-data-btn" class="flex-shrink-0 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition py-2 px-3 shadow-lg" title="Salin data mentah (long format) ke clipboard">Copy Data</button>
 
         <!-- Tombol WhatsApp (BARU) -->
-        <a href="https://wa.me/6285119888882" target="_blank" class="flex-shrink-0 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition py-2 px-3 shadow-lg" title="Hubungi kami via WhatsApp">WA</a>
+        <a href="https://wa.me/6281234567890" target="_blank" class="flex-shrink-0 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition py-2 px-3 shadow-lg" title="Hubungi kami via WhatsApp">WhatsApp</a>
     </div>
     <!-- END FLOATING BUTTONS -->
 
@@ -338,18 +339,19 @@
     const ALPHA = 0.05; // Nilai signifikansi standar
 
     // Tambahkan state baru untuk mengontrol visibilitas kolom
+    // State diatur ke nilai kosong/nol
     let state = {
         R: 2,
         C: 2,
-        varXName: "Variabel X",
-        varYName: "Variabel Y",
-        catXNames: ["Kategori A", "Kategori B"], 
-        catYNames: ["Kategori C", "Kategori D"], 
-        catXCodes: ["0", "1"],
-        catYCodes: ["0", "1"],
+        varXName: "", // Kosong
+        varYName: "", // Kosong
+        catXNames: ["", ""], // Kosong
+        catYNames: ["", ""], // Kosong
+        catXCodes: ["", ""], // Kosong
+        catYCodes: ["", ""], // Kosong
         frequencies: [
-            [5, 2],
-            [1, 4]
+            [0, 0], // Nol
+            [0, 0]  // Nol
         ],
         crosstabOpen: false,
         detailedOpen: false,
@@ -373,8 +375,9 @@
             state = stateHistory.pop();
             
             // Perbarui input dimensi agar sesuai dengan state yang dipulihkan
-            document.getElementById('num_categories_x').value = state.R;
-            document.getElementById('num_categories_y').value = state.C;
+            // Catatan: Jika nilai R/C yang dipulihkan adalah 2, input akan dikosongkan lagi di bawah.
+            document.getElementById('num_categories_x').value = state.R > 2 ? state.R : "";
+            document.getElementById('num_categories_y').value = state.C > 2 ? state.C : "";
             document.getElementById('varX_name').value = state.varXName;
             document.getElementById('varY_name').value = state.varYName;
 
@@ -405,7 +408,7 @@
 
     // Fungsi Gamma Teratur Tidak Lengkap (Continuous Fraction)
     const gammaCF = (a, x) => {
-        const ITMAX = 100;
+        const ITMAX = 200; // Ditingkatkan untuk mengatasi konvergensi lambat pada kasus ekstrem
         const EPS = 3.0e-7;
         let i, b, c, d, del;
         let an, h;
@@ -430,7 +433,8 @@
 
         if (i > ITMAX) {
             console.error("A continues fraction failed");
-            return NaN;
+            // Kembalikan NaN jika gagal konvergen setelah ditingkatkan
+            return NaN; 
         }
         return Math.exp(-x + a * Math.log(x) - gammaLn(a)) * h;
     };
@@ -445,9 +449,8 @@
         
         // P-value adalah luasan ekor (1 - CDF)
         // Fungsi gammaCF menghitung P(a, x) = Q(a, x) = 1 - P(a, x)
-        // Dimana P(a, x) adalah P(x | a), jadi CDF
         
-        // Kasus spesial df=1 (digunakan untuk Continuity Correction)
+        // Kasus spesial df=1 (tetap menggunakan fungsi erfc yang lebih stabil untuk df=1)
         if (df === 1) {
             const z = Math.sqrt(chi);
             const erfc = (x) => {
@@ -461,7 +464,7 @@
             return erfc(z / Math.sqrt(2));
         }
 
-        // P-Value untuk df > 1 (menggunakan Continuous Fraction)
+        // P-Value untuk df > 1 (menggunakan Continuous Fraction yang batasnya sudah ditingkatkan)
         return gammaCF(a, x);
     };
 
@@ -601,7 +604,8 @@
         // 1. Baca dimensi baru
         const numX = document.getElementById('num_categories_x');
         const numY = document.getElementById('num_categories_y');
-
+        
+        // Gunakan 2 sebagai nilai minimum jika input kosong/NaN
         const newR = parseInt(numX.value) || 2;
         const newC = parseInt(numY.value) || 2;
         
@@ -612,8 +616,12 @@
         // 2. Update state dimensi baru (dengan clamp)
         state.R = Math.max(2, Math.min(10, newR));
         state.C = Math.max(2, Math.min(10, newC));
-        numX.value = state.R; // Update input field jika nilai dikunci (clamped)
-        numY.value = state.C;
+        
+        // HANYA update nilai input jika clamped (yaitu jika user input 0 atau 1 atau > 10).
+        // Jika input kosong, biarkan kosong. Jika valid (>=2), biarkan input tetap dengan nilai yang dimasukkan.
+        if (newR < 2 || newR > 10) numX.value = state.R;
+        if (newC < 2 || newC > 10) numY.value = state.C;
+
 
         // 3. Preserve data and resize arrays
         state.varXName = document.getElementById('varX_name').value;
@@ -625,37 +633,28 @@
         let currentCatXCodes = [];
         let currentCatYCodes = [];
         
+        // Pastikan kita membaca semua data yang mungkin ada sebelum me-resize
         for (let i = 0; i < oldR; i++) {
             const elXName = document.getElementById(`catX_name_${i}`);
             if (elXName) currentCatXNames[i] = elXName.value;
             const elXCode = document.getElementById(`catX_code_${i}`);
             if (elXCode) currentCatXCodes[i] = elXCode.value;
-
-            const elYName = document.getElementById(`catY_name_${i}`);
-            if (elYName) currentCatYNames[i] = elYName.value;
-            const elYCode = document.getElementById(`catY_code_${i}`);
-            if (elYCode) currentCatYCodes[i] = elYCode.value;
         }
 
-        // Resize dan isi nama default, mempertahankan nama lama
-        state.catXNames = Array(state.R).fill().map((_, i) => {
-             if (i < oldR) return currentCatXNames[i];
-             return i === 0 ? "Kategori A" : i === 1 ? "Kategori B" : `Kategori ${i+1}`;
-        });
-        state.catYNames = Array(state.C).fill().map((_, j) => {
-             if (j < oldC) return currentCatYNames[j];
-             return j === 0 ? "Kategori C" : j === 1 ? "Kategori D" : `Kategori ${j+1}`;
-        });
+        for (let j = 0; j < oldC; j++) {
+            const elYName = document.getElementById(`catY_name_${j}`);
+            if (elYName) currentCatYNames[j] = elYName.value;
+            const elYCode = document.getElementById(`catY_code_${j}`);
+            if (elYCode) currentCatYCodes[j] = elYCode.value;
+        }
+
+        // Resize dan isi nama default, mempertahankan nama lama (jika ada, jika tidak, kosong)
+        state.catXNames = Array(state.R).fill().map((_, i) => (i < oldR && currentCatXNames[i] !== undefined) ? currentCatXNames[i] : "");
+        state.catYNames = Array(state.C).fill().map((_, j) => (j < oldC && currentCatYNames[j] !== undefined) ? currentCatYNames[j] : "");
         
-        // Resize dan isi kode default (0, 1, 2, ...)
-        state.catXCodes = Array(state.R).fill().map((_, i) => {
-             if (i < oldR) return currentCatXCodes[i] || String(i);
-             return String(i);
-        });
-        state.catYCodes = Array(state.C).fill().map((_, j) => {
-             if (j < oldC) return currentCatYCodes[j] || String(j);
-             return String(j);
-        });
+        // Resize dan isi kode default, mempertahankan kode lama (jika ada, jika tidak, kosong)
+        state.catXCodes = Array(state.R).fill().map((_, i) => (i < oldR && currentCatXCodes[i] !== undefined) ? currentCatXCodes[i] : "");
+        state.catYCodes = Array(state.C).fill().map((_, j) => (j < oldC && currentCatYCodes[j] !== undefined) ? currentCatYCodes[j] : "");
 
 
         // Resize dan isi frekuensi default, mempertahankan data lama
@@ -665,6 +664,7 @@
                 // Pertahankan data lama
                 if (i < oldR && j < oldC) {
                     const el = document.getElementById(`freq_${i}_${j}`);
+                    // Baca nilai input terbaru (atau gunakan nilai state lama jika input tidak ditemukan)
                     newFrequencies[i][j] = parseInt(el?.value) || state.frequencies[i][j] || 0;
                 } else {
                     newFrequencies[i][j] = 0;
@@ -707,7 +707,8 @@
         for (let i = 0; i < state.R; i++) {
             for (let j = 0; j < state.C; j++) {
                 const el = document.getElementById(`freq_${i}_${j}`);
-                if(el) state.frequencies[i][j] = parseInt(el.value) || 0;
+                // Jika input kosong, set ke 0
+                if(el) state.frequencies[i][j] = parseInt(el.value) || 0; 
             }
         }
         
@@ -737,16 +738,26 @@
         let freqHtml = '<table class="w-full text-sm">';
         freqHtml += `<thead><tr><th class="py-2"></th>`;
         // Header kolom (Nama Kategori Y)
-        state.catYNames.forEach(name => {
-            freqHtml += `<th class="font-medium text-slate-600 py-2">${name}</th>`;
+        // Gunakan nama Variabel Y dari input atau fallback ke "Kolom"
+        const varYNameDisplay = state.varYName || "Kolom";
+        state.catYNames.forEach((name, j) => {
+            // Gunakan nama kategori atau fallback ke "Kategori X"
+            const catYNameDisplay = name || `Kategori ${j+1}`;
+            freqHtml += `<th class="font-medium text-slate-600 py-2" title="${varYNameDisplay}: ${catYNameDisplay}">${catYNameDisplay}</th>`;
         });
         freqHtml += `</tr></thead><tbody>`;
         for (let i = 0; i < state.R; i++) {
-            // Label baris (Nama Kategori X) - TIDAK ADA LABEL KATEGORI DI SINI
-            freqHtml += `<tr class="border-t border-slate-200"><td class="font-medium text-slate-600 py-2 pr-2">${state.catXNames[i]}</td>`;
+            // Label baris (Nama Kategori X) 
+            const varXNameDisplay = state.varXName || "Baris";
+            const catXNameDisplay = state.catXNames[i] || `Kategori ${i+1}`;
+
+            freqHtml += `<tr class="border-t border-slate-200"><td class="font-medium text-slate-600 py-2 pr-2" title="${varXNameDisplay}: ${catXNameDisplay}">${catXNameDisplay}</td>`;
             for (let j = 0; j < state.C; j++) {
-                // Input Frekuensi (mempertahankan value lama)
-                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${state.frequencies[i][j]}" min="0" class="input-style text-xs" title="Frekuensi Observasi Baris ${state.catXNames[i]} Kolom ${state.catYNames[j]}"></td>`;
+                // Input Frekuensi (mempertahankan value lama, jika 0 tampilkan kosong)
+                // Jika state.frequencies[i][j] adalah 0, maka value inputnya adalah string kosong ""
+                const freqValue = state.frequencies[i][j] > 0 ? state.frequencies[i][j] : ""; 
+
+                freqHtml += `<td class="p-1"><input type="number" id="freq_${i}_${j}" value="${freqValue}" min="0" class="input-style text-xs" placeholder="0" title="Frekuensi Observasi Baris ${catXNameDisplay} Kolom ${state.catYNames[j] || `Kategori ${j+1}`}"></td>`;
             }
             freqHtml += `</tr>`;
         }
@@ -781,9 +792,13 @@
                 const count = state.frequencies[i][j];
                 const codeX = state.catXCodes[i];
                 const codeY = state.catYCodes[j];
+                
+                // Jika kode kosong, gunakan index sebagai fallback untuk salinan data mentah
+                const finalCodeX = codeX || String(i);
+                const finalCodeY = codeY || String(j);
 
                 for (let k = 0; k < count; k++) {
-                    rawObservations.push(`${codeX}\t${codeY}`);
+                    rawObservations.push(`${finalCodeX}\t${finalCodeY}`);
                 }
             }
         }
@@ -825,9 +840,13 @@
     const renderRawDataView = () => {
         const rawDataContainer = document.getElementById('raw-data-table-content');
         
+        // Gunakan nama variabel atau fallback
+        const varXNameDisplay = state.varXName || "Variabel X";
+        const varYNameDisplay = state.varYName || "Variabel Y";
+
         let rawDataHtml = `<table class="raw-data-table w-full"><thead><tr>
-                             <th class="bg-slate-200">${state.varXName}</th>
-                             <th class="bg-slate-200">${state.varYName}</th>
+                             <th class="bg-slate-200">${varXNameDisplay}</th>
+                             <th class="bg-slate-200">${varYNameDisplay}</th>
                            </tr></thead><tbody>`;
 
         const rawObservations = [];
@@ -841,9 +860,13 @@
                 const codeX = state.catXCodes[i];
                 const codeY = state.catYCodes[j];
                 totalCount += count;
+                
+                // Gunakan kode atau index jika kode kosong
+                const finalCodeX = codeX || String(i);
+                const finalCodeY = codeY || String(j);
 
                 for (let k = 0; k < count; k++) {
-                    rawObservations.push({ x: codeX, y: codeY });
+                    rawObservations.push({ x: finalCodeX, y: finalCodeY });
                 }
             }
         }
@@ -875,7 +898,7 @@
         collapseState.indexToCollapse = indexToCollapse;
 
         const targetCategories = axis === 'R' ? state.catXNames : state.catYNames;
-        const nameToCollapse = targetCategories[indexToCollapse];
+        const nameToCollapse = targetCategories[indexToCollapse] || `Kategori ${indexToCollapse + 1}`;
         
         msgSpan.textContent = `'${nameToCollapse}'`;
         select.innerHTML = ''; // Kosongkan pilihan lama
@@ -884,7 +907,8 @@
         let optionsHtml = '<option value="" disabled selected>Pilih Kategori...</option>';
         targetCategories.forEach((name, index) => {
             if (index !== indexToCollapse) {
-                optionsHtml += `<option value="${index}">${name} (Kategori ${index + 1})</option>`;
+                const catNameDisplay = name || `Kategori ${index + 1}`;
+                optionsHtml += `<option value="${index}">${catNameDisplay} (Kategori ${index + 1})</option>`;
             }
         });
         select.innerHTML = optionsHtml;
@@ -931,8 +955,10 @@
             // Hapus baris yang digabungkan dari state
             state.frequencies.splice(indexToCollapse, 1);
             
-            // Gabungkan nama kategori
-            state.catXNames[targetIndex] += `/${state.catXNames[indexToCollapse]}`;
+            // Gabungkan nama kategori (Gabungkan string dengan separator "/")
+            const nameToMerge = state.catXNames[indexToCollapse] || `Kategori ${indexToCollapse + 1}`;
+            const targetName = state.catXNames[targetIndex] || `Kategori ${targetIndex + 1}`;
+            state.catXNames[targetIndex] = `${targetName}/${nameToMerge}`;
             state.catXNames.splice(indexToCollapse, 1);
             
             // Hapus kode yang digabungkan (kode baru akan tetap berada di targetIndex)
@@ -941,7 +967,7 @@
 
             // Update dimensi
             state.R--;
-            document.getElementById('num_categories_x').value = state.R;
+            document.getElementById('num_categories_x').value = state.R > 2 ? state.R : "";
 
         } else if (axis === 'C') { // Menggabungkan Kolom (Variabel Y)
             if (state.C <= 2) return;
@@ -953,7 +979,9 @@
             }
 
             // Gabungkan nama kategori
-            state.catYNames[targetIndex] += `/${state.catYNames[indexToCollapse]}`;
+            const nameToMerge = state.catYNames[indexToCollapse] || `Kategori ${indexToCollapse + 1}`;
+            const targetName = state.catYNames[targetIndex] || `Kategori ${targetIndex + 1}`;
+            state.catYNames[targetIndex] = `${targetName}/${nameToMerge}`;
             state.catYNames.splice(indexToCollapse, 1);
             
             // Hapus kode yang digabungkan
@@ -961,7 +989,7 @@
 
             // Update dimensi
             state.C--;
-            document.getElementById('num_categories_y').value = state.C;
+            document.getElementById('num_categories_y').value = state.C > 2 ? state.C : "";
         }
 
         // 3. Render ulang semua
@@ -1137,36 +1165,42 @@
         collapseCtrlBtn.classList.toggle('hidden', !showCollapseCtrlButton);
         
         // --- 4. Tentukan template grid baru berdasarkan status toggle ---
-        let gridTemplateColumns = '1fr';
+        // HILANGKAN KOLOM '0.5fr' DI AWAL
+        let gridTemplateColumns = ''; 
         
-        // Kolom Nama X (1fr)
-        gridTemplateColumns += ' 1fr'; 
+        // Kolom Nama X (3fr)
+        gridTemplateColumns += ' 3fr'; 
         
-        // Kolom Kode X (0.5fr)
-        if (state.codingOpen) gridTemplateColumns += ' 0.5fr';
+        // Kolom Kode X (0.3fr)
+        if (state.codingOpen) gridTemplateColumns += ' 0.3fr'; 
         
         // Kolom Gabung X (0.4fr)
         if (state.collapseControlOpen && state.R > 2) gridTemplateColumns += ' 0.4fr';
 
-        // Kolom Nama Y (1fr)
-        gridTemplateColumns += ' 1fr';
+        // Kolom Nama Y (3fr)
+        gridTemplateColumns += ' 3fr';
         
-        // Kolom Kode Y (0.5fr)
-        if (state.codingOpen) gridTemplateColumns += ' 0.5fr';
+        // Kolom Kode Y (0.3fr)
+        if (state.codingOpen) gridTemplateColumns += ' 0.3fr'; 
 
         // Kolom Gabung Y (0.4fr)
         if (state.collapseControlOpen && state.C > 2) gridTemplateColumns += ' 0.4fr';
+        
+        // Hapus spasi di awal string
+        gridTemplateColumns = gridTemplateColumns.trim();
 
         let catHtml = '';
 
         // Terapkan ke Header Grid
         catHtml += `<div class="category-input-grid mb-1" style="grid-template-columns: ${gridTemplateColumns}">`;
         
-        // Header Kolom
-        catHtml += `<span class="category-header-col-2">${state.varXName}</span>`;
+        // Header Kolom Nama X (sekarang di posisi 1)
+        catHtml += `<span class="category-header-col-2">${state.varXName || "Variabel X"}</span>`;
         if (state.codingOpen) catHtml += `<span class="category-header-col-3">Kode X</span>`; 
         if (state.collapseControlOpen && state.R > 2) catHtml += `<span class="category-header-col-4">Gabung X</span>`; 
-        catHtml += `<span class="category-header-col-5">${state.varYName}</span>`;
+        
+        // Header Kolom Nama Y
+        catHtml += `<span class="category-header-col-5">${state.varYName || "Variabel Y"}</span>`;
         if (state.codingOpen) catHtml += `<span class="category-header-col-6">Kode Y</span>`; 
         if (state.collapseControlOpen && state.C > 2) catHtml += `<span class="category-header-col-7">Gabung Y</span>`; 
         
@@ -1179,15 +1213,14 @@
             // Terapkan ke Baris Input
             catHtml += `<div class="category-input-grid" style="grid-template-columns: ${gridTemplateColumns}">`;
             
-            // Kolom Nama X (hanya jika i < R)
-            // Menggunakan optional chaining untuk menghindari error undefined index saat pertama kali load
+            // Kolom Nama X (sekarang di posisi 1)
             const catXName = state.catXNames[i] || "";
             const catYName = state.catYNames[i] || "";
             const catXCode = state.catXCodes[i] || "";
             const catYCode = state.catYCodes[i] || "";
 
             if (i < state.R) {
-                catHtml += `<div><input type="text" id="catX_name_${i}" value="${catXName}" class="label-input-style text-center text-xs" title="Nama kategori ${catXName} ke-${i+1}"></div>`;
+                catHtml += `<div><input type="text" id="catX_name_${i}" value="${catXName}" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" placeholder="Kategori ${i+1}" title="Nama kategori ${state.varXName || 'X'} ke-${i+1}"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
@@ -1195,7 +1228,7 @@
             // Kolom Kode X
             if (state.codingOpen) {
                 if (i < state.R) {
-                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${catXCode}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${catXName}"></div>`;
+                     catHtml += `<div><input type="text" id="catX_code_${i}" value="${catXCode}" class="input-style text-center text-xs" oninput="handleInputChange(event)" placeholder="${i}" title="Kode numerik untuk kategori ${catXName || `Kategori ${i+1}`}"></div>`;
                 } else {
                      catHtml += `<div></div>`;
                 }
@@ -1215,7 +1248,7 @@
 
             // Kolom Nama Y (hanya jika i < C)
             if (i < state.C) {
-                catHtml += `<div><input type="text" id="catY_name_${i}" value="${catYName}" class="label-input-style text-center text-xs" title="Nama kategori ${state.varYName} ke-${i+1}"></div>`;
+                catHtml += `<div><input type="text" id="catY_name_${i}" value="${catYName}" class="label-input-style text-center text-xs" oninput="handleInputChange(event)" placeholder="Kategori ${i+1}" title="Nama kategori ${state.varYName || 'Y'} ke-${i+1}"></div>`;
             } else {
                 catHtml += `<div></div>`;
             }
@@ -1223,7 +1256,7 @@
             // Kolom Kode Y
             if (state.codingOpen) {
                 if (i < state.C) {
-                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${catYCode}" class="input-style text-center text-xs" title="Kode numerik untuk kategori ${catYName}"></div>`;
+                    catHtml += `<div><input type="text" id="catY_code_${i}" value="${catYCode}" class="input-style text-center text-xs" oninput="handleInputChange(event)" placeholder="${i}" title="Kode numerik untuk kategori ${catYName || `Kategori ${i+1}`}"></div>`;
                 } else {
                     catHtml += `<div></div>`;
                 }
@@ -1286,7 +1319,7 @@
         
         for (let i = 0; i < state.R; i++) {
             const rowTotal = stats.Ri[i];
-            const catXName = state.catXNames[i];
+            const catXName = state.catXNames[i] || `Kategori ${i+1}`;
             
             if (rowTotal === 0) continue; // Lewati baris jika total observasi 0
 
@@ -1295,14 +1328,14 @@
             for (let j = 0; j < state.C; j++) {
                 const obs = stats.O[i][j];
                 const percent = (obs / rowTotal * 100).toFixed(1);
-                const catYName = state.catYNames[j];
+                const catYName = state.catYNames[j] || `Kategori ${j+1}`;
                 
-                let segment = `${obs} orang (${percent}%) yang mempunyai ${state.varYName} ${catYName}`;
+                let segment = `${obs} orang (${percent}%) yang mempunyai ${state.varYName || 'Variabel Y'} ${catYName}`;
                 rowSegments.push(segment);
             }
             
             // Gabungkan segmen baris
-            let rowInterpretation = `dari ${rowTotal} orang yang mempunyai ${state.varXName} ${catXName} terdapat `;
+            let rowInterpretation = `dari ${rowTotal} orang yang mempunyai ${state.varXName || 'Variabel X'} ${catXName} terdapat `;
             
             if (rowSegments.length > 1) {
                 const lastSegment = rowSegments.pop();
@@ -1480,12 +1513,12 @@
             // Logika: Merah jika p > 0.05 (Tidak Signifikan), Hijau jika p < 0.05 (Signifikan)
             if (p < ALPHA) {
                 // Signifikan (Tolak Ho) -> HIJAU
-                conclusion = `Sehingga signifikan, jadi Ho ditolak dan Ha diterima, yang berarti ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
+                conclusion = `Sehingga signifikan, jadi Ho ditolak dan Ha diterima, yang berarti ada hubungan yang signifikan antara ${state.varXName || 'Variabel X'} dengan ${state.varYName || 'Variabel Y'}.`; // Hapus **
                 addClasses = ['bg-red-50', 'border-red-500']; // Kelas interpretasi tetap merah untuk Tolak Ho
                 pValueDisplay.classList.add('bg-green-600', 'text-white'); // Warna PILIHAN USER (Hijau)
             } else {
                 // Tidak Signifikan (Terima Ho) -> MERAH
-                conclusion = `Sehingga tidak signifikan, jadi Ho diterima dan Ha ditolak, yang berarti tidak ada hubungan yang signifikan antara ${state.varXName} dengan ${state.varYName}.`; // Hapus **
+                conclusion = `Sehingga tidak signifikan, jadi Ho diterima dan Ha ditolak, yang berarti tidak ada hubungan yang signifikan antara ${state.varXName || 'Variabel X'} dengan ${state.varYName || 'Variabel Y'}.`; // Hapus **
                 addClasses = ['bg-green-50', 'border-green-500']; // Kelas interpretasi tetap hijau untuk Terima Ho
                 pValueDisplay.classList.add('bg-red-500', 'text-white'); // Warna PILIHAN USER (Merah)
             }
@@ -1508,17 +1541,22 @@
         const head = document.getElementById('crosstab-head');
         const body = document.getElementById('crosstab-body');
         if (!stats || stats.N === 0) { head.innerHTML = ''; body.innerHTML = ''; return; }
+        
+        // Fallback untuk nama variabel
+        const varXNameDisplay = state.varXName || 'Variabel X';
+        const varYNameDisplay = state.varYName || 'Variabel Y';
 
         let headHtml = `<tr class="bg-slate-50">
-                             <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${state.varXName}</th>
+                             <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${varXNameDisplay}</th>
                              <th rowspan="2" class="px-6 py-1 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ukuran</th>
-                             <th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">${state.varYName}</th>
+                             <th colspan="${state.C}" class="px-6 py-1 text-center text-xs font-medium text-slate-500">${varYNameDisplay}</th>
                              <th rowspan="2" class="px-6 py-1 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
                          </tr>
                          <tr class="bg-slate-50">`;
         // Baris kedua head (kolom kategori Y)
-        state.catYNames.forEach(name => {
-            headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500">${name}</th>`;
+        state.catYNames.forEach((name, j) => {
+            const catYNameDisplay = name || `Kategori ${j+1}`;
+            headHtml += `<th class="px-6 py-1 text-right text-xs font-medium text-slate-500">${catYNameDisplay}</th>`;
         });
         headHtml += `</tr>`;
         head.innerHTML = headHtml;
@@ -1527,7 +1565,9 @@
         let bodyHtml = '';
         for (let i = 0; i < state.R; i++) {
             const rowTotal = stats.Ri[i];
-            bodyHtml += `<tr class="bg-white"><td rowspan="3" class="px-6 py-1 font-medium text-slate-900 align-top">${state.catXNames[i]}</td>
+            const catXNameDisplay = state.catXNames[i] || `Kategori ${i+1}`;
+
+            bodyHtml += `<tr class="bg-white"><td rowspan="3" class="px-6 py-1 font-medium text-slate-900 align-top">${catXNameDisplay}</td>
                              <td class="px-6 py-1 text-slate-500">Observasi</td>`;
             for (let j = 0; j < state.C; j++) {
                 bodyHtml += `<td class="px-6 py-1 text-right">${stats.O[i][j]}</td>`;
@@ -1540,7 +1580,7 @@
             }
             bodyHtml += `<td class="px-6 py-1 text-right font-medium">${rowTotal.toFixed(1)}</td></tr>`;
             
-            bodyHtml += `<tr class="border-b border-slate-300"><td class="px-6 py-1 text-slate-500">% dalam ${state.varXName}</td>`;
+            bodyHtml += `<tr class="border-b border-slate-300"><td class="px-6 py-1 text-slate-500">% dalam ${varXNameDisplay}</td>`;
             for (let j = 0; j < state.C; j++) {
                 const percent = rowTotal > 0 ? (stats.O[i][j] / rowTotal * 100).toFixed(1) + '%' : '0.0%';
                 bodyHtml += `<td class="px-6 py-1 text-right">${percent}</td>`;
@@ -1626,14 +1666,19 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Atur state awal dan setup listener utama
-        state.catXNames = Array(state.R).fill().map((_, i) => i < 2 ? (i === 0 ? "Kategori A" : "Kategori B") : `Kategori ${i+1}`);
-        state.catYNames = Array(state.C).fill().map((_, j) => j < 2 ? (j === 0 ? "Kategori C" : "Kategori D") : `Kategori ${j+1}`);
-        state.catXCodes = Array(state.R).fill().map((_, i) => String(i));
-        state.catYCodes = Array(state.C).fill().map((_, j) => String(j));
-
+        // Atur state awal (sudah kosong, ini hanya memastikan)
+        state.R = 2;
+        state.C = 2;
+        state.varXName = "";
+        state.varYName = "";
+        state.catXNames = ["", ""];
+        state.catYNames = ["", ""];
+        state.catXCodes = ["", ""];
+        state.catYCodes = ["", ""];
+        state.frequencies = [[0, 0], [0, 0]];
+        
         setupListeners(); 
-        handleDimensionChange(); // Panggil ini untuk inisialisasi awal DOM dan hasil
+        handleDimensionChange(); // Panggil ini untuk inisialisasi awal DOM dan hasil (menggunakan R=2, C=2 internal)
         
         // Inisialisasi tampilan tombol Raw Data agar sesuai dengan default: Hijau solid dan teks "Data Mentah"
         const rawDataButton = document.getElementById('toggle-raw-data-btn');
